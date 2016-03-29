@@ -633,7 +633,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
     return $form;
   }
 
-  $form['#attached']['js'][] = drupal_get_path('module', 'conditional_fields') . '/js/conditional_fields.js';
+  $form['#attached']['library'][] = array('conditional_fields', 'conditional_fields');
 
   // Add effect settings to the form.
   if ($effects) {
@@ -1424,6 +1424,23 @@ function conditional_fields_element_info() {
   return array(
     'conditional_fields_table' => array(
       '#theme' => 'conditional_fields_table',
+    ),
+  );
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function conditional_fields_libraries_info() {
+  return array(
+    'conditional_fields' => array(
+      'tile' => 'Conditional Fields',
+      'js' => array(
+        drupal_get_path('module', 'conditional_fields') . '/js/conditional_fields.js' => array(),
+      ),
+      'dependencies' => array(
+        array('system', 'drupal.states'),
+      ),
     ),
   );
 }

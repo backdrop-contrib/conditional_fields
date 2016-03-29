@@ -133,7 +133,7 @@ Drupal.behaviors.conditionalFields = {
             }
           }
           originalHandler(e);
-        }
+        };
       }
     });
   }
