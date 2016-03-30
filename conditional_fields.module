@@ -1451,14 +1451,15 @@ function conditional_fields_element_info() {
 }
 
 /**
- * Implements hook_libraries_info().
+ * Implements hook_library().
  */
-function conditional_fields_libraries_info() {
+function conditional_fields_library() {
   return array(
     'conditional_fields' => array(
       'tile' => 'Conditional Fields',
+      'version' => '1.0.0',
       'js' => array(
-        drupal_get_path('module', 'conditional_fields') . '/js/conditional_fields.js' => array(),
+        drupal_get_path('module', 'conditional_fields') . '/js/conditional_fields.js' => array('group' => JS_DEFAULT),
       ),
       'dependencies' => array(
         array('system', 'drupal.states'),
