@@ -544,11 +544,10 @@ function conditional_fields_form_after_build($form, &$form_state) {
 
       // Add the $state into the correct logic group in $states.
       foreach ($state as $key => $constraints) {
-        if (empty($states[$key][$options['grouping']])) {
-          $states[$key][$options['grouping']] = $constraints;
-        }
-        else {
-          $states[$key][$options['grouping']] = array_merge($states[$key][$options['grouping']], $constraints);
+        foreach ($constraints as $selector => $constraint) {
+          // Add the constraint in an array to avoid overwriting other
+          // dependencies' states with the same selector.
+          $states[$key][$options['grouping']][$selector][] = $constraint;
         }
       }
 
