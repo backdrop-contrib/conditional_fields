@@ -541,7 +541,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
       }
 
       // Add validation callback to element if the dependency can be evaluated.
-      if (in_array($options['condition'], array('value'))) {
+      if (in_array($options['condition'], array('value', 'empty', '!empty'))) {
         _conditional_fields_element_add_property($dependent_form_field, '#element_validate', 'conditional_fields_dependent_validate', 'append');
       }
 
@@ -1005,7 +1005,7 @@ function conditional_fields_evaluate_dependencies($dependent, $form, $form_state
 
   foreach ($dependencies as $dependency_id => $dependency) {
     // Skip dependencies that can't be evaluated.
-    if (!in_array($dependency['options']['condition'], array('value'))) {
+    if (!in_array($dependency['options']['condition'], array('value', 'empty', '!empty'))) {
       continue;
     }
 
@@ -1040,6 +1040,15 @@ function conditional_fields_evaluate_dependencies($dependent, $form, $form_state
  *   $values are extracted from an entity.
  */
 function conditional_fields_evaluate_dependency($context, $values, $options) {
+  if ($options['condition'] == 'empty') {
+    $options['values_set'] = CONDITIONAL_FIELDS_DEPENDENCY_VALUES_AND;
+    $options['values'] = array('');
+  }
+  elseif ($options['condition'] == '!empty') {
+    $options['values_set'] = CONDITIONAL_FIELDS_DEPENDENCY_VALUES_NOT;
+    $options['values'] = array('');
+  }
+
   if ($options['values_set'] == CONDITIONAL_FIELDS_DEPENDENCY_VALUES_WIDGET) {
     $dependency_values = $context == 'view' ? $options['value'] : $options['value_form'];
 
@@ -1625,7 +1634,7 @@ function conditional_fields_behaviors($op = NULL) {
   $behaviors = array(
     'edit' => array(
       CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_ORPHAN => t('Hide the dependent if the dependee is not in the form'),
-      CONDITIONAL_FIELDS_FIELD_EDIT_RESET_UNTRIGGERED => t('Reset the dependent to its default values when the form is submitted if the dependency is not triggered.') . '<br /><em>' . t('Note: This setting only applies if the condition is "Value" and may not work with some field types. Also, ensure that the default values are valid, since they will not be validated.') . '</em>',
+      CONDITIONAL_FIELDS_FIELD_EDIT_RESET_UNTRIGGERED => t('Reset the dependent to its default values when the form is submitted if the dependency is not triggered.') . '<br /><em>' . t('Note: This setting only applies if the condition is "Value", "Empty", or "Filled" and may not work with some field types. Also, ensure that the default values are valid, since they will not be validated.') . '</em>',
       // TODO: Implement. Settings are imported from D6 though, they just do nothing for now.
       /*
       CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_UNTRIGGERED_ORPHAN => t('Hide the dependent if the dependee is not in the form and the dependency is not triggered.') . '<br /><em>' . t('Note: This setting is not currently not implemented and has no effect.') . '</em>',

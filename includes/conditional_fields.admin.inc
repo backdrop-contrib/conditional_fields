@@ -676,7 +676,7 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
     '#type' => 'checkboxes',
     '#title' => t('View context settings for all roles'),
     '#title_display' => 'invisible',
-    '#description' => t('Note: Options that need to evaluate if the dependency is triggered only apply if the condition is "Value".'),
+    '#description' => t('Note: Options that need to evaluate if the dependency is triggered only apply if the condition is "Value", "Empty", or "Filled".'),
     '#options' => $behaviors['view'],
     '#default_value' => $dependency['options']['element_view'],
     '#states' => array(
