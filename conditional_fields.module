@@ -4,7 +4,7 @@
  * @file
  * Define dependencies between fields based on their states and values.
  *
- * Conditional Fields for Drupal 7 is basically an user interface for the States
+ * Conditional Fields for Backdrop 7 is basically an user interface for the States
  * API, plus the ability to hide fields on certain conditions when viewing
  * content.
  */
@@ -109,7 +109,7 @@ function conditional_fields_menu() {
 
   $items['admin/structure/dependencies'] = array(
     'title' => 'Field dependencies',
-    'description' =>  'Administer field dependencies for the site.',
+    'description' => 'Administer field dependencies for the site.',
     'page callback' => 'conditional_fields_dependencies_overview_page',
     'access arguments' => array('administer dependencies'),
     'file' => 'includes/conditional_fields.admin.inc',
@@ -123,7 +123,7 @@ function conditional_fields_menu() {
 
   $items['admin/structure/dependencies/edit/%conditional_fields_dependency'] = array(
     'title' => 'Edit dependency',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('conditional_fields_dependency_edit_form', 4),
     'access arguments' => array('administer dependencies'),
     'file' => 'includes/conditional_fields.admin.inc',
@@ -131,7 +131,7 @@ function conditional_fields_menu() {
 
   $items['admin/structure/dependencies/delete/%conditional_fields_dependency'] = array(
     'title' => 'Delete dependency',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('conditional_fields_dependency_delete_form', 4),
     'access arguments' => array('administer dependencies'),
     'file' => 'includes/conditional_fields.admin.inc',
@@ -235,7 +235,7 @@ function conditional_fields_element_after_build($element, &$form_state) {
   $form = &$form_state['complete form'];
 
   // Avoid processing fields in fields_ui administration pages.
-  if (drupal_substr($form['#form_id'], 0, 9) == 'field_ui_') {
+  if (backdrop_substr($form['#form_id'], 0, 9) == 'field_ui_') {
     return $element;
   }
 
@@ -365,10 +365,10 @@ function conditional_fields_attach_dependency(&$form, $dependee, $dependent, $op
     if (is_string($dependee) && is_string($dependent)) {
       $dependee = array(
         '#field_name' => $dependee,
-        '#parents'    => array($dependee),
+        '#parents' => array($dependee),
       );
       $dependent = array(
-        '#field_name'    => $dependent,
+        '#field_name' => $dependent,
         '#field_parents' => array($dependent),
       );
 
@@ -389,7 +389,7 @@ function conditional_fields_attach_dependency(&$form, $dependee, $dependent, $op
     $form['#conditional_fields'][$dependee['#field_name']]['parents'] = $dependee['#array_parents'];
     $form['#conditional_fields'][$dependee['#field_name']]['dependents'][$id] = array(
       'dependent' => $dependent['#field_name'],
-      'options'   => $options,
+      'options' => $options,
     );
   }
 
@@ -404,7 +404,7 @@ function conditional_fields_attach_dependency(&$form, $dependee, $dependent, $op
     $form['#conditional_fields'][$dependent['#field_name']]['field_parents'] = $dependent_parents;
     $form['#conditional_fields'][$dependent['#field_name']]['dependees'][$id] = array(
       'dependee' => $dependee['#field_name'],
-      'options'  => $options,
+      'options' => $options,
     );
   }
 
@@ -438,7 +438,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
     }
 
     $dependent_location = array_merge($dependent_info['field_parents'], array($dependent));
-    $dependent_form_field = drupal_array_get_nested_value($form, $dependent_location);
+    $dependent_form_field = backdrop_array_get_nested_value($form, $dependent_location);
 
     // Cycle the dependant's dependees.
     foreach ($dependent_info['dependees'] as $dependency) {
@@ -449,7 +449,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
       }
 
       $dependee_info = $form['#conditional_fields'][$dependee];
-      $dependee_form_field = drupal_array_get_nested_value($form, $dependee_info['parents']);
+      $dependee_form_field = backdrop_array_get_nested_value($form, $dependee_info['parents']);
       $options = $dependency['options'];
 
       // Load field edit behaviors.
@@ -463,15 +463,15 @@ function conditional_fields_form_after_build($form, &$form_state) {
       if (empty($dependee_form_field) || (isset($dependee_form_field['#access']) && $dependee_form_field['#access'] == FALSE)) {
         // Apply orphan dependent behaviors.
         /*
-        if (in_array(CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_UNTRIGGERED_ORPHAN, $behaviors)) {
-          // TODO
-          $is_triggered = TRUE;
+         if (in_array(CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_UNTRIGGERED_ORPHAN, $behaviors)) {
+         // TODO
+         $is_triggered = TRUE;
 
-          if ($is_orphan && !$is_triggered) {
-            $form[$dependent]['#access'] = FALSE;
-          }
-        }
-        */
+         if ($is_orphan && !$is_triggered) {
+         $form[$dependent]['#access'] = FALSE;
+         }
+         }
+         */
         if (in_array(CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_ORPHAN, $behaviors)) {
           $dependent_form_field['#access'] = FALSE;
         }
@@ -518,7 +518,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
           }
           elseif ($options['values_set'] == CONDITIONAL_FIELDS_DEPENDENCY_VALUES_NOT) {
             // NOT behaves like OR with switched state.
-            $options['state'] = strpos($options['state'], '!') === 0 ? drupal_substr($options['state'], 1) : '!' . $options['state'];
+            $options['state'] = strpos($options['state'], '!') === 0 ? backdrop_substr($options['state'], 1) : '!' . $options['state'];
           }
 
           // OR, NOT and XOR conditions are obtained with a nested array.
@@ -557,7 +557,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
       // Build effect settings for effects with options.
       // TODO: add dependee key to allow different effects on the same selector.
       if ($options['effect'] && $options['effect'] != 'show') {
-        $selector = conditional_fields_field_selector(drupal_array_get_nested_value($form, array($dependent_location[0])));
+        $selector = conditional_fields_field_selector(backdrop_array_get_nested_value($form, array($dependent_location[0])));
         // Convert numeric strings to numbers.
         foreach ($options['effect_options'] as &$effect_option) {
           if (is_numeric($effect_option)) {
@@ -593,7 +593,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
     }
 
     // Save the modified field back into the form.
-    drupal_array_set_nested_value($form, $dependent_location, $dependent_form_field);
+    backdrop_array_set_nested_value($form, $dependent_location, $dependent_form_field);
 
     // Map the states based on the conjunctions.
     $states_new = array();
@@ -626,7 +626,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
     $states = $states_new;
 
     // Add the #states property to the dependent field.
-    drupal_array_set_nested_value($form, array_merge($dependent_location, array('#states')), $states);
+    backdrop_array_set_nested_value($form, array_merge($dependent_location, array('#states')), $states);
 
     $has_states = TRUE;
   }
@@ -698,7 +698,7 @@ function conditional_fields_dependent_validate($element, &$form_state, $form) {
     foreach ($errors as $name => $error) {
       // An error triggered by this field might have been set on a descendant
       // element. This also means that so there can be multiple errors on the
-      // same field (even though Drupal doesn't support multiple errors on the
+      // same field (even though Backdrop doesn't support multiple errors on the
       // same element).
       if (strpos($name, $error_key) === 0) {
         $field_errors[$name] = $error;
@@ -723,7 +723,7 @@ function conditional_fields_dependent_validate($element, &$form_state, $form) {
 function conditional_fields_field_get_values($element, $form_state) {
   // Fall back to #parents to support custom dependencies.
   $parents = !empty($element['#field_parents']) ? $element['#field_parents'] : $element['#parents'];
-  return drupal_array_get_nested_value($form_state['values'], $parents);
+  return backdrop_array_get_nested_value($form_state['values'], $parents);
 }
 
 /**
@@ -744,7 +744,7 @@ function conditional_fields_form_validate($form, &$form_state) {
   $untriggered_dependents_errors = array();
 
   foreach ($form_state['conditional_fields_untriggered_dependents'] as $field) {
-    $dependent = drupal_array_get_nested_value($form, $field['parents']);
+    $dependent = backdrop_array_get_nested_value($form, $field['parents']);
     $field_values_location = conditional_fields_field_get_values($dependent, $form_state);
 
     // If we couldn't find a location for the field's submitted values, let the
@@ -769,7 +769,7 @@ function conditional_fields_form_validate($form, &$form_state) {
     // $form_state['values'][ ... $element['#parents'] ... ], while the
     // documentation of hook_field_widget_form() states that field values are
     // $form_state['values'][ ... $element['#field_parents'] ... ].
-    drupal_array_set_nested_value($form_state['values'], $dependent['#field_parents'], $field_values_location);
+    backdrop_array_set_nested_value($form_state['values'], $dependent['#field_parents'], $field_values_location);
 
     if (!empty($field['errors'])) {
       $untriggered_dependents_errors = array_merge($untriggered_dependents_errors, $field['errors']);
@@ -777,19 +777,19 @@ function conditional_fields_form_validate($form, &$form_state) {
   }
 
   if (!empty($untriggered_dependents_errors)) {
-    // Since Drupal provides no clean way to selectively remove error messages,
+    // Since Backdrop provides no clean way to selectively remove error messages,
     // we have to store all current form errors and error messages, clear them,
     // filter out from our stored values the errors originating from untriggered
     // dependent fields, and then reinstate remaining errors and messages.
     $errors = array_diff_assoc((array) form_get_errors(), $untriggered_dependents_errors);
     form_clear_error();
-    $error_messages = drupal_get_messages('error');
+    $error_messages = backdrop_get_messages('error');
     $removed_messages = array_values($untriggered_dependents_errors);
 
     // Reinstate remaining errors.
     foreach ($errors as $name => $error) {
       form_set_error($name, $error);
-      // form_set_error() calls drupal_set_message(), so we have to filter out
+      // form_set_error() calls backdrop_set_message(), so we have to filter out
       // these from the messages to avoid duplicates.
       $removed_messages[] = $error;
     }
@@ -797,7 +797,7 @@ function conditional_fields_form_validate($form, &$form_state) {
     // Reinstate remaining error messages (which, at this point, are messages that
     // were originated outside of the validation process).
     foreach (array_diff($error_messages['error'], $removed_messages) as $message) {
-      drupal_set_message($message, 'error');
+      backdrop_set_message($message, 'error');
     }
   }
 }
@@ -1028,7 +1028,7 @@ function conditional_fields_field_form_get_values($field_name, $form, $form_stat
   // part of the value. So we find the depth of the field inside the form
   // structure and use the parents only up to that depth.
   $field_parents_keys = array_flip($field_parents);
-  $field_parent = drupal_array_get_nested_value($form, array_slice($field_parents, 0, $field_parents_keys[$field_name]));
+  $field_parent = backdrop_array_get_nested_value($form, array_slice($field_parents, 0, $field_parents_keys[$field_name]));
   $values = conditional_fields_field_get_values($field_parent[$field_name], $form_state);
 
   // Remove the language key.
@@ -1240,16 +1240,16 @@ function conditional_fields_field_selector($field) {
  */
 function conditional_fields_dependency_default_options() {
   return array(
-    'state'                 => 'visible',
-    'condition'             => 'value',
-    'grouping'              => 'AND',
-    'values_set'            => CONDITIONAL_FIELDS_DEPENDENCY_VALUES_WIDGET,
-    'value'                 => array(),
-    'values'                => array(),
-    'value_form'            => array(),
-    'effect'                => 'show',
-    'effect_options'        => array(),
-    'element_view'          => array(
+    'state' => 'visible',
+    'condition' => 'value',
+    'grouping' => 'AND',
+    'values_set' => CONDITIONAL_FIELDS_DEPENDENCY_VALUES_WIDGET,
+    'value' => array(),
+    'values' => array(),
+    'value_form' => array(),
+    'effect' => 'show',
+    'effect_options' => array(),
+    'element_view' => array(
       CONDITIONAL_FIELDS_FIELD_VIEW_EVALUATE => CONDITIONAL_FIELDS_FIELD_VIEW_EVALUATE,
       CONDITIONAL_FIELDS_FIELD_VIEW_HIDE_ORPHAN => CONDITIONAL_FIELDS_FIELD_VIEW_HIDE_ORPHAN,
       CONDITIONAL_FIELDS_FIELD_VIEW_HIDE_UNTRIGGERED_ORPHAN => 0,
@@ -1257,15 +1257,15 @@ function conditional_fields_dependency_default_options() {
       CONDITIONAL_FIELDS_FIELD_VIEW_DESCRIBE => 0,
     ),
     'element_view_per_role' => 0,
-    'element_view_roles'    => array(),
-    'element_edit'          => array(
+    'element_view_roles' => array(),
+    'element_edit' => array(
       CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_ORPHAN => CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_ORPHAN,
       CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_UNTRIGGERED_ORPHAN => 0,
       CONDITIONAL_FIELDS_FIELD_EDIT_RESET_UNTRIGGERED => 0,
     ),
     'element_edit_per_role' => 0,
-    'element_edit_roles'    => array(),
-    'selector'              => '',
+    'element_edit_roles' => array(),
+    'selector' => '',
   );
 }
 
@@ -1275,10 +1275,10 @@ function conditional_fields_dependency_default_options() {
  * The result can be filtered by providing an entity type and a bundle name.
  */
 function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NULL) {
-  // Use the advanced drupal_static() pattern.
+  // Use the advanced backdrop_static() pattern.
   static $dependencies;
   if (!isset($dependencies)) {
-    $dependencies = &drupal_static(__FUNCTION__);
+    $dependencies = &backdrop_static(__FUNCTION__);
   }
 
   if (!$dependencies) {
@@ -1328,12 +1328,12 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
 
       $dependencies[$result_entity_type][$result_bundle]['dependents'][$dependency->dependent][$dependency->id] = array(
         'dependee' => $dependency->dependee,
-        'options'  => $options,
+        'options' => $options,
       );
 
       $dependencies[$result_entity_type][$result_bundle]['dependees'][$dependency->dependee][$dependency->id] = array(
         'dependent' => $dependency->dependent,
-        'options'  => $options,
+        'options' => $options,
       );
     }
   }
@@ -1383,12 +1383,12 @@ function conditional_fields_dependency_load($id) {
 function conditional_fields_dependency_insert($dependee_id, $dependent_id, $options = array()) {
   $options += conditional_fields_dependency_default_options();
   $dependency = array(
-    'dependee'  => $dependee_id,
+    'dependee' => $dependee_id,
     'dependent' => $dependent_id,
-    'options'   => $options,
+    'options' => $options,
   );
 
-  if (drupal_write_record('conditional_fields', $dependency)) {
+  if (backdrop_write_record('conditional_fields', $dependency)) {
     return $dependency['id'];
   }
 }
@@ -1397,7 +1397,7 @@ function conditional_fields_dependency_insert($dependee_id, $dependent_id, $opti
  * Updates a dependency.
  */
 function conditional_fields_dependency_update($dependency) {
-  drupal_write_record('conditional_fields', $dependency, 'id');
+  backdrop_write_record('conditional_fields', $dependency, 'id');
 }
 
 /**
@@ -1459,10 +1459,10 @@ function conditional_fields_library() {
       'tile' => 'Conditional Fields',
       'version' => '1.0.0',
       'js' => array(
-        drupal_get_path('module', 'conditional_fields') . '/js/conditional_fields.js' => array('group' => JS_DEFAULT),
+        backdrop_get_path('module', 'conditional_fields') . '/js/conditional_fields.js' => array('group' => JS_DEFAULT),
       ),
       'dependencies' => array(
-        array('system', 'drupal.states'),
+        array('system', 'backdrop.states'),
       ),
     ),
   );
@@ -1474,35 +1474,35 @@ function conditional_fields_library() {
 function conditional_fields_states() {
   $states = array(
     // Supported by States API
-    'visible'    => t('Visible'),
-    '!visible'   => t('Invisible'),
-    '!empty'     => t('Filled with a value'),
-    'empty'      => t('Emptied'),
-    '!disabled'  => t('Enabled'),
-    'disabled'   => t('Disabled'),
-    'checked'    => t('Checked'),
-    '!checked'   => t('Unchecked'),
-    'required'   => t('Required'),
-    '!required'  => t('Optional'),
+    'visible' => t('Visible'),
+    '!visible' => t('Invisible'),
+    '!empty' => t('Filled with a value'),
+    'empty' => t('Emptied'),
+    '!disabled' => t('Enabled'),
+    'disabled' => t('Disabled'),
+    'checked' => t('Checked'),
+    '!checked' => t('Unchecked'),
+    'required' => t('Required'),
+    '!required' => t('Optional'),
     '!collapsed' => t('Expanded'),
-    'collapsed'  => t('Collapsed'),
+    'collapsed' => t('Collapsed'),
     // Supported by Conditional Fields
-    'unchanged'  => t('Unchanged (no state)'),
+    'unchanged' => t('Unchanged (no state)'),
     // TODO: Add support to these states:
     /*
-    'relevant'   => t('Relevant'),
-    '!relevant'  => t('Irrelevant'),
-    'valid'      => t('Valid'),
-    '!valid'     => t('Invalid'),
-    'touched'    => t('Touched'),
-    '!touched'   => t('Untouched'),
-    '!readonly'  => t('Read/Write'),
-    'readonly'   => t('Read Only'),
-    */
+ 'relevant'   => t('Relevant'),
+ '!relevant'  => t('Irrelevant'),
+ 'valid'      => t('Valid'),
+ '!valid'     => t('Invalid'),
+ 'touched'    => t('Touched'),
+ '!touched'   => t('Untouched'),
+ '!readonly'  => t('Read/Write'),
+ 'readonly'   => t('Read Only'),
+ */
   );
 
   // Allow other modules to modify the states
-  drupal_alter('conditional_fields_states', $states);
+  backdrop_alter('conditional_fields_states', $states);
 
   return $states;
 }
@@ -1585,7 +1585,7 @@ function conditional_fields_effects() {
   );
 
   // Allow other modules to modify the effects.
-  drupal_alter('conditional_fields_effects', $effects);
+  backdrop_alter('conditional_fields_effects', $effects);
 
   return $effects;
 }
@@ -1596,12 +1596,12 @@ function conditional_fields_effects() {
 function conditional_fields_conditions($checkboxes = TRUE) {
   // Supported by States API
   $conditions = array(
-    '!empty'     => t('Filled'),
-    'empty'      => t('Empty'),
-    'touched'    => t('Touched'),
-    '!touched'   => t('Untouched'),
-    'focused'    => t('Focused'),
-    '!focused'   => t('Unfocused'),
+    '!empty' => t('Filled'),
+    'empty' => t('Empty'),
+    'touched' => t('Touched'),
+    '!touched' => t('Untouched'),
+    'focused' => t('Focused'),
+    '!focused' => t('Unfocused'),
   );
 
   if ($checkboxes) {
@@ -1614,22 +1614,22 @@ function conditional_fields_conditions($checkboxes = TRUE) {
 
   // TODO: Add support from Conditional Fields to these conditions
   /*
-  '!disabled'  => t('Enabled'),
-  'disabled'   => t('Disabled'),
-  'required'   => t('Required'),
-  '!required'  => t('Optional'),
-  'relevant'   => t('Relevant'),
-  '!relevant'  => t('Irrelevant'),
-  'valid'      => t('Valid'),
-  '!valid'     => t('Invalid'),
-  '!readonly'  => t('Read/Write'),
-  'readonly'   => t('Read Only'),
-  '!collapsed' => t('Expanded'),
-  'collapsed'  => t('Collapsed'),
-  */
+   '!disabled'  => t('Enabled'),
+   'disabled'   => t('Disabled'),
+   'required'   => t('Required'),
+   '!required'  => t('Optional'),
+   'relevant'   => t('Relevant'),
+   '!relevant'  => t('Irrelevant'),
+   'valid'      => t('Valid'),
+   '!valid'     => t('Invalid'),
+   '!readonly'  => t('Read/Write'),
+   'readonly'   => t('Read Only'),
+   '!collapsed' => t('Expanded'),
+   'collapsed'  => t('Collapsed'),
+   */
 
   // Allow other modules to modify the conditions
-  drupal_alter('conditional_fields_conditions', $conditions);
+  backdrop_alter('conditional_fields_conditions', $conditions);
 
   return $conditions;
 }
@@ -1645,8 +1645,8 @@ function conditional_fields_behaviors($op = NULL) {
       CONDITIONAL_FIELDS_FIELD_EDIT_RESET_UNTRIGGERED => t('Reset the dependent to its default values when the form is submitted if the dependency is not triggered.') . '<br /><em>' . t('Note: This setting only applies if the condition is "Value", "Empty", or "Filled" and may not work with some field types. Also, ensure that the default values are valid, since they will not be validated.') . '</em>',
       // TODO: Implement. Settings are imported from D6 though, they just do nothing for now.
       /*
-      CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_UNTRIGGERED_ORPHAN => t('Hide the dependent if the dependee is not in the form and the dependency is not triggered.') . '<br /><em>' . t('Note: This setting is not currently not implemented and has no effect.') . '</em>',
-      */
+ CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_UNTRIGGERED_ORPHAN => t('Hide the dependent if the dependee is not in the form and the dependency is not triggered.') . '<br /><em>' . t('Note: This setting is not currently not implemented and has no effect.') . '</em>',
+ */
     ),
     'view' => array(
       CONDITIONAL_FIELDS_FIELD_VIEW_EVALUATE => t('Hide the dependent if the dependency is not triggered'),
@@ -1658,7 +1658,7 @@ function conditional_fields_behaviors($op = NULL) {
   );
 
   // Allow other modules to modify the options.
-  drupal_alter('conditional_fields_behaviors', $behaviors);
+  backdrop_alter('conditional_fields_behaviors', $behaviors);
 
   if (isset($behaviors[$op])) {
     return $behaviors[$op];
@@ -1707,7 +1707,7 @@ function conditional_fields_states_handlers() {
   );
 
   // Allow other modules to modify the handlers
-  drupal_alter('conditional_fields_states_handlers', $handlers);
+  backdrop_alter('conditional_fields_states_handlers', $handlers);
 
   return $handlers;
 }
@@ -1941,7 +1941,7 @@ function conditional_fields_dependency_description($dependee_name, $dependent_na
         if (count($options['value']) == 1) {
           return t('%dependent_name is !state when %dependee_name has value "@value".', array(
             '%dependent_name' => $dependent_name,
-            '!state' => drupal_strtolower($states[$options['state']]),
+            '!state' => backdrop_strtolower($states[$options['state']]),
             '%dependee_name' => $dependee_name,
             '@value' => current($options['value'][0]),
           ));
@@ -1968,7 +1968,7 @@ function conditional_fields_dependency_description($dependee_name, $dependent_na
       case CONDITIONAL_FIELDS_DEPENDENCY_VALUES_REGEX:
         return t('%dependent_name is !state when %dependee_name values match the regular expression: @regex.', array(
           '%dependent_name' => $dependent_name,
-          '!state' => drupal_strtolower($states[$options['state']]),
+          '!state' => backdrop_strtolower($states[$options['state']]),
           '%dependee_name' => $dependee_name,
           '@regex' => $options['value']['RegExp'],
         ));
@@ -1977,7 +1977,7 @@ function conditional_fields_dependency_description($dependee_name, $dependent_na
 
     return t($description, array(
       '%dependent_name' => $dependent_name,
-      '!state' => drupal_strtolower($states[$options['state']]),
+      '!state' => backdrop_strtolower($states[$options['state']]),
       '%dependee_name' => $dependee_name,
       '@values' => $values,
     ));
@@ -1987,9 +1987,9 @@ function conditional_fields_dependency_description($dependee_name, $dependent_na
 
     return t('%dependent_name is !state when %dependee_name is !condition.', array(
       '%dependent_name' => $dependent_name,
-      '!state' => drupal_strtolower($states[$options['state']]),
+      '!state' => backdrop_strtolower($states[$options['state']]),
       '%dependee_name' => $dependee_name,
-      '!condition' => drupal_strtolower($conditions[$options['condition']]),
+      '!condition' => backdrop_strtolower($conditions[$options['condition']]),
     ));
   }
 }
@@ -2023,7 +2023,7 @@ function conditional_fields_features_api() {
       'default_hook' => 'conditional_fields_default_fields',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
       'feature_source' => TRUE,
-      'file' => drupal_get_path('module', 'conditional_fields') . '/includes/conditional_fields.features.inc',
+      'file' => backdrop_get_path('module', 'conditional_fields') . '/includes/conditional_fields.features.inc',
     ),
   );
 }

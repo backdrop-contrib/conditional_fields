@@ -1,0 +1,12 @@
+[ConditionalFieldsTestCase]
+name = Conditional Fields
+description = Test Conditional Fields functionality.
+group = Conditional Fields
+file = conditional_fields.test
+
+[ConditionalFieldsUITestCase]
+name = Conditional Fields UI
+description = Test Conditional Fields UI.
+group = Conditional Fields
+file = conditional_fields.test
+

@@ -94,7 +94,7 @@ function conditional_fields_features_rebuild($module) {
     $dependencies = conditional_fields_load_dependencies();
     $instances = field_info_instances();
     foreach ($defaults as $item) {
-      foreach($item as $field) {
+      foreach ($item as $field) {
         if (isset($dependencies[$field['entity']][$field['bundle']])) {
           foreach ($dependencies[$field['entity']][$field['bundle']] as $dependancy_type => $field_dep_settings) {
             if ($dependancy_type == 'dependees' && !empty($field_dep_settings)) {

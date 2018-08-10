@@ -39,7 +39,7 @@ function conditional_fields_dependencies_overview_page($bundle_name = NULL, $ent
   $build = array();
 
   if (!$entity_type) {
-    $build['#attached']['library'][] = array('system', 'drupal.collapse');
+    $build['#attached']['library'][] = array('system', 'backdrop.collapse');
   }
 
   foreach ($entities as $entity_name => $entity_info) {
@@ -83,7 +83,7 @@ function conditional_fields_dependencies_overview_page($bundle_name = NULL, $ent
           );
         }
 
-        $build[$entity_name][$bundle_info_name] += drupal_get_form('conditional_fields_dependency_add_form_' . $entity_name . '_' . $bundle_info_name);
+        $build[$entity_name][$bundle_info_name] += backdrop_get_form('conditional_fields_dependency_add_form_' . $entity_name . '_' . $bundle_info_name);
 
         if (!$entity_type && !isset($build[$entity_name][$bundle_info_name]['no_fields'])) {
           $build[$entity_name]['#collapsed'] = FALSE;
@@ -124,8 +124,14 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
     '#header' => array(
       t('Dependent'),
       t('Dependees'),
-      array('data' => t('Description'), 'colspan' => 2),
-      array('data' => t('Operations'), 'colspan' => 2),
+      array(
+        'data' => t('Description'),
+        'colspan' => 2,
+      ),
+      array(
+        'data' => t('Operations'),
+        'colspan' => 2,
+      ),
     ),
     '#attributes' => array(
       'class' => array('conditional-fields-overview'),
@@ -133,10 +139,10 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
     'dependencies' => array(),
   );
 
-  $form['table']['#attached']['css'][] = drupal_get_path('module', 'conditional_fields') . '/conditional_fields.css';
+  $form['table']['#attached']['css'][] = backdrop_get_path('module', 'conditional_fields') . '/conditional_fields.css';
 
   if ($dependencies) {
-    $destination = drupal_get_destination();
+    $destination = backdrop_get_destination();
     $grouping_count = array();
 
     foreach ($dependencies['dependents'] as $dependent => $dependees) {
@@ -197,14 +203,20 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
           '#type' => 'link',
           '#title' => t('edit'),
           '#href' => 'admin/structure/dependencies/edit/' . $id,
-          '#options' => array('query' => $destination, 'attributes' => array('title' => t('Edit dependency settings.'))),
-          '#query' => drupal_get_destination(),
+          '#options' => array(
+            'query' => $destination,
+            'attributes' => array('title' => t('Edit dependency settings.')),
+          ),
+          '#query' => backdrop_get_destination(),
         );
         $row['delete'] = array(
           '#type' => 'link',
           '#title' => t('delete'),
           '#href' => 'admin/structure/dependencies/delete/' . $id,
-          '#options' => array('query' => $destination, 'attributes' => array('title' => t('Delete dependency.'))),
+          '#options' => array(
+            'query' => $destination,
+            'attributes' => array('title' => t('Delete dependency.')),
+          ),
         );
 
         $form['table']['dependencies'][$id] += $row;
@@ -222,11 +234,11 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
   asort($fields);
 
   // Build list of states.
-  $states = array_map('drupal_strtolower', conditional_fields_states());
+  $states = array_map('backdrop_strtolower', conditional_fields_states());
 
   // Build list of conditions.
   foreach (conditional_fields_conditions() as $condition => $label) {
-    $conditions[$condition] = $condition == 'value' ? t('has value...') : t('is !label', array('!label' => drupal_strtolower($label)));
+    $conditions[$condition] = $condition == 'value' ? t('has value...') : t('is !label', array('!label' => backdrop_strtolower($label)));
   }
 
   // Add new dependency row.
@@ -300,16 +312,16 @@ function conditional_fields_dependency_add_form_validate($form, &$form_state) {
 function conditional_fields_dependency_add_form_submit($form, &$form_state) {
   $options = array(
     'state' => $form_state['values']['state'],
-    'condition' => $form_state['values']['condition']
+    'condition' => $form_state['values']['condition'],
   );
 
   if (!$id = conditional_fields_dependency_insert($form_state['values']['dependee'], $form_state['values']['dependent'], $options)) {
-    drupal_set_message(t('There was an error while trying to create the dependency.'), 'error');
+    backdrop_set_message(t('There was an error while trying to create the dependency.'), 'error');
     return;
   }
 
-  $destination = drupal_get_destination();
-  drupal_goto("admin/structure/dependencies/edit/$id", array('query' => $destination));
+  $destination = backdrop_get_destination();
+  backdrop_goto("admin/structure/dependencies/edit/$id", array('query' => $destination));
 }
 
 /**
@@ -337,7 +349,7 @@ function theme_conditional_fields_table($variables) {
   foreach (element_children($elements['dependencies']) as $dependency) {
     foreach (element_children($elements['dependencies'][$dependency]) as $cell_key) {
       $cell = array(
-        'data' => drupal_render($elements['dependencies'][$dependency][$cell_key]),
+        'data' => backdrop_render($elements['dependencies'][$dependency][$cell_key]),
       );
       foreach (array('#colspan', '#rowspan') as $row_attribute) {
         if (isset($elements['dependencies'][$dependency][$cell_key][$row_attribute])) {
@@ -350,14 +362,14 @@ function theme_conditional_fields_table($variables) {
 
   // Add new dependency row.
   $table['rows'][] = array(
-    drupal_render($elements['add_new_dependency']['dependent']),
-    drupal_render($elements['add_new_dependency']['dependee']),
+    backdrop_render($elements['add_new_dependency']['dependent']),
+    backdrop_render($elements['add_new_dependency']['dependee']),
     array(
-      'data' => drupal_render($elements['add_new_dependency']['state']) . drupal_render($elements['add_new_dependency']['condition']),
+      'data' => backdrop_render($elements['add_new_dependency']['state']) . backdrop_render($elements['add_new_dependency']['condition']),
       'colspan' => 2,
     ),
     array(
-      'data' => drupal_render($elements['add_new_dependency']['actions']),
+      'data' => backdrop_render($elements['add_new_dependency']['actions']),
       'colspan' => 2,
     ),
   );
@@ -375,7 +387,7 @@ function theme_conditional_fields_table($variables) {
 function conditional_fields_dependency_edit_form($form, &$form_state, $dependency) {
   $form['#dependency'] = $dependency;
 
-  $form['#attached']['css'][] = drupal_get_path('module', 'conditional_fields') . '/conditional_fields.css';
+  $form['#attached']['css'][] = backdrop_get_path('module', 'conditional_fields') . '/conditional_fields.css';
 
   // Retrieve needed information from the dependee instance.
   // Since we only have the instance id here (id column of the
@@ -425,7 +437,7 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
       CONDITIONAL_FIELDS_DEPENDENCY_VALUES_REGEX => t('Regular expression...'),
       t('Set of values') => array(
         CONDITIONAL_FIELDS_DEPENDENCY_VALUES_AND => t('All these values (AND)...'),
-        CONDITIONAL_FIELDS_DEPENDENCY_VALUES_OR  => t('Any of these values (OR)...'),
+        CONDITIONAL_FIELDS_DEPENDENCY_VALUES_OR => t('Any of these values (OR)...'),
         CONDITIONAL_FIELDS_DEPENDENCY_VALUES_XOR => t('Only one of these values (XOR)...'),
         CONDITIONAL_FIELDS_DEPENDENCY_VALUES_NOT => t('None of these values (NOT)...'),
         // TODO: PHP evaluation
@@ -500,7 +512,11 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
     '#type' => 'radios',
     '#title' => t('Interaction with other dependencies'),
     '#description' => t('When this dependent has more than one dependee, how should this condition be evaluated against the others?') . '<br />' . t('Note that sets will be grouped this way: (ANDs) AND (ORs) AND (XORs).'),
-    '#options' => array('AND' => 'AND', 'OR' => 'OR', 'XOR' => 'XOR'),
+    '#options' => array(
+      'AND' => 'AND',
+      'OR' => 'OR',
+      'XOR' => 'XOR',
+    ),
     '#default_value' => $dependency['options']['grouping'],
     '#required' => TRUE,
   );
@@ -510,7 +526,7 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
   $form['entity_edit'] = array(
     '#type' => 'fieldset',
     '#title' => t('Edit context settings'),
-    '#description' => t('These settings apply when the @entity is being added or edited in a form.', array('@entity' => drupal_strtolower($entity['label']))),
+    '#description' => t('These settings apply when the @entity is being added or edited in a form.', array('@entity' => backdrop_strtolower($entity['label']))),
     '#collapsible' => FALSE,
   );
 
@@ -641,7 +657,7 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
 
   $form['entity_edit']['dependency_advanced'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Advanced edit context settings', array('@entity' => drupal_strtolower($entity['label']))),
+    '#title' => t('Advanced edit context settings', array('@entity' => backdrop_strtolower($entity['label']))),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -663,7 +679,7 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
   $form['entity_view'] = array(
     '#type' => 'fieldset',
     '#title' => t('View context settings'),
-    '#description' => t('These settings apply when the @entity is viewed.', array('@entity' => drupal_strtolower($entity['label']))),
+    '#description' => t('These settings apply when the @entity is viewed.', array('@entity' => backdrop_strtolower($entity['label']))),
     '#collapsible' => FALSE,
   );
 
@@ -714,7 +730,7 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
   );
 
   // Redirect to bundle dependencies form if destination is set.
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
   if ($destination['destination'] != 'admin/structure/dependencies') {
     $form_state['redirect'] = $destination['destination'];
   }
@@ -729,10 +745,10 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
  */
 function conditional_fields_dependency_edit_form_validate($form, &$form_state) {
   if ($form_state['values']['condition'] == 'value') {
-    if (in_array($form_state['values']['values_set'], array(CONDITIONAL_FIELDS_DEPENDENCY_VALUES_AND, CONDITIONAL_FIELDS_DEPENDENCY_VALUES_OR, CONDITIONAL_FIELDS_DEPENDENCY_VALUES_XOR, CONDITIONAL_FIELDS_DEPENDENCY_VALUES_NOT)) && drupal_strlen(trim($form_state['values']['values'])) == 0) {
+    if (in_array($form_state['values']['values_set'], array(CONDITIONAL_FIELDS_DEPENDENCY_VALUES_AND, CONDITIONAL_FIELDS_DEPENDENCY_VALUES_OR, CONDITIONAL_FIELDS_DEPENDENCY_VALUES_XOR, CONDITIONAL_FIELDS_DEPENDENCY_VALUES_NOT)) && backdrop_strlen(trim($form_state['values']['values'])) == 0) {
       form_set_error('values', t('!name field is required.', array('!name' => t('Set of values'))));
     }
-    elseif ($form_state['values']['values_set'] == CONDITIONAL_FIELDS_DEPENDENCY_VALUES_REGEX && drupal_strlen(trim($form_state['values']['regex'])) == 0) {
+    elseif ($form_state['values']['values_set'] == CONDITIONAL_FIELDS_DEPENDENCY_VALUES_REGEX && backdrop_strlen(trim($form_state['values']['regex'])) == 0) {
       form_set_error('regex', t('!name field is required.', array('!name' => t('Regular expression'))));
     }
   }
@@ -751,22 +767,22 @@ function conditional_fields_dependency_edit_form_submit($form, &$form_state) {
   // TODO: unify 'value' and 'values' fields.
 
   $dependency = array(
-    'id'        => $form['#dependency']['id'],
-    'dependee'  => $form['#dependency']['dependee'],
+    'id' => $form['#dependency']['id'],
+    'dependee' => $form['#dependency']['dependee'],
     'dependent' => $form['#dependency']['dependent'],
-    'options'   => array(
-      'state'                 => $form_state['values']['state'],
-      'condition'             => $form_state['values']['condition'],
-      'grouping'              => $form_state['values']['grouping'],
-      'effect'                => isset($form_state['values']['effect']) ? $form_state['values']['effect'] : FALSE,
-      'effect_options'        => isset($form_state['values']['effect'], $form_state['values']['effect_options'][$form_state['values']['effect']]) ? $form_state['values']['effect_options'][$form_state['values']['effect']] : array(),
-      'element_view'          => $form_state['values']['element_view'],
+    'options' => array(
+      'state' => $form_state['values']['state'],
+      'condition' => $form_state['values']['condition'],
+      'grouping' => $form_state['values']['grouping'],
+      'effect' => isset($form_state['values']['effect']) ? $form_state['values']['effect'] : FALSE,
+      'effect_options' => isset($form_state['values']['effect'], $form_state['values']['effect_options'][$form_state['values']['effect']]) ? $form_state['values']['effect_options'][$form_state['values']['effect']] : array(),
+      'element_view' => $form_state['values']['element_view'],
       'element_view_per_role' => $form_state['values']['element_view_per_role'],
-      'element_view_roles'    => $form_state['values']['element_view_roles'],
-      'element_edit'          => $form_state['values']['element_edit'],
+      'element_view_roles' => $form_state['values']['element_view_roles'],
+      'element_edit' => $form_state['values']['element_edit'],
       'element_edit_per_role' => $form_state['values']['element_edit_per_role'],
-      'element_edit_roles'    => $form_state['values']['element_edit_roles'],
-      'selector'              => $form_state['values']['selector'],
+      'element_edit_roles' => $form_state['values']['element_edit_roles'],
+      'selector' => $form_state['values']['selector'],
     ),
   );
 
@@ -801,7 +817,7 @@ function conditional_fields_dependency_edit_form_submit($form, &$form_state) {
   }
 
   conditional_fields_dependency_update($dependency);
-  drupal_set_message(t('Saved dependency configuration.'));
+  backdrop_set_message(t('Saved dependency configuration.'));
 }
 
 /**
@@ -815,7 +831,7 @@ function conditional_fields_ajax_admin_state_callback($form, &$form_state) {
  * Confirm form for the deletion of a dependency.
  */
 function conditional_fields_dependency_delete_form($form, $form_state, $dependency) {
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   return confirm_form(
     array(
@@ -837,7 +853,7 @@ function conditional_fields_dependency_delete_form($form, $form_state, $dependen
  */
 function conditional_fields_dependency_delete_form_submit($form, &$form_state) {
   conditional_fields_dependency_delete(array($form_state['values']['dependency']));
-  drupal_set_message(t('The dependency has been deleted.'));
+  backdrop_set_message(t('The dependency has been deleted.'));
 }
 
 /**

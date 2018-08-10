@@ -1,6 +1,7 @@
 name = Conditional Fields
 description = Define dependencies between fields based on their states and values.
-core = 7.x
+backdrop = 1.x
+type = module
 package = Fields
 
 dependencies[] = system (>=7.14)

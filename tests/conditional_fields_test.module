@@ -16,3 +16,11 @@ function conditional_fields_test_node_info() {
     ),
   );
 }
+
+/**
+ * Implements hook_autoload_info().
+ */
+function conditional_fields_test_autoload_info() {
+  return array(
+  );
+}
