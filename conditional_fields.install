@@ -40,55 +40,6 @@ function conditional_fields_schema() {
 }
 
 /**
- * Table schema used for initial upgrade to Backdrop 7. Do not edit this function.
- */
-function conditional_fields_schema_7000() {
-  return array(
-    'fields' => array(
-      'id' => array(
-        'type' => 'serial',
-        'not null' => TRUE,
-        'description' => 'The primary identifier for a dependency.',
-      ),
-      'dependee' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'description' => 'The id of the dependee field instance.',
-      ),
-      'dependent' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'description' => 'The id of the dependent field instance.',
-      ),
-      'options' => array(
-        'type' => 'blob',
-        'size' => 'big',
-        'not null' => TRUE,
-        'serialize' => TRUE,
-        'description' => 'Serialized data containing the options for the dependency.',
-      ),
-    ),
-    'primary key' => array('id'),
-  );
-}
-
-/**
- * Implements hook_last_removed().
- */
-function conditional_fields_last_removed() {
-  return 6002;
-}
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function conditional_fields_update_7000() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function conditional_fields_update_7001() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function conditional_fields_update_7002() { }
-
-/**
  * Implements hook_update_last_removed().
  */
 function conditional_fields_update_last_removed() {

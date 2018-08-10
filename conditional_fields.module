@@ -4,7 +4,7 @@
  * @file
  * Define dependencies between fields based on their states and values.
  *
- * Conditional Fields for Backdrop 7 is basically an user interface for the States
+ * Conditional Fields for Backdrop is basically an user interface for the States
  * API, plus the ability to hide fields on certain conditions when viewing
  * content.
  */
@@ -263,6 +263,7 @@ function conditional_fields_element_after_build($element, &$form_state) {
 
   // Attach dependent.
   if (isset($dependencies['dependents'][$field['#field_name']])) {
+    debug($dependencies['dependents'][$field['#field_name']]);
     foreach ($dependencies['dependents'][$field['#field_name']] as $id => $dependency) {
       if (!isset($form['#conditional_fields'][$field['#field_name']]['dependees'][$id])) {
         conditional_fields_attach_dependency($form, array('#field_name' => $dependency['dependee']), $field, $dependency['options'], $id);
@@ -1292,16 +1293,16 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
     $default_options = conditional_fields_dependency_default_options();
 
     $select = db_select('conditional_fields', 'cf')
-      ->fields('cf', array('id', 'options'))
+      ->fields('cf', array('id', 'options', 'dependee', 'dependent'))
       ->orderBy('cf.dependent');
-    $fci_depende = $select->join('field_config_instance', 'fci_dependee', 'cf.dependee = fci_dependee.id');
-    $fci_dependent = $select->join('field_config_instance', 'fci_dependent', 'cf.dependent = fci_dependent.id');
-    $select->addField($fci_depende, 'field_name', 'dependee');
-    $select->addField($fci_dependent, 'field_name', 'dependent');
-    $select->addField($fci_depende, 'entity_type');
-    $select->addField($fci_depende, 'bundle');
+    //$fci_depende = $select->join('field_config_instance', 'fci_dependee', 'cf.dependee = fci_dependee.id');
+    //$fci_dependent = $select->join('field_config_instance', 'fci_dependent', 'cf.dependent = fci_dependent.id');
+    //$select->addField($fci_depende, 'field_name', 'dependee');
+    //$select->addField($fci_dependent, 'field_name', 'dependent');
+    //$select->addField($fci_depende, 'entity_type');
+    //$select->addField($fci_depende, 'bundle');
 
-    if ($entity_type) {
+    if (0 && $entity_type) {
       $select->condition(
         db_and()
           ->condition('fci_dependee.entity_type', $entity_type)
@@ -1309,15 +1310,17 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
       );
     }
 
-    if ($bundle) {
+    if (0 && $bundle) {
       $select->condition(
         db_and()
           ->condition('fci_dependee.bundle', $bundle)
           ->condition('fci_dependent.bundle', $bundle)
       );
     }
+    //$instance_settings = config_get("field.instance.$entity_type.$bundle.$field_name");
 
     $result = $select->execute();
+    debug($result);
 
     foreach ($result as $dependency) {
       $result_entity_type = $entity_type ? $entity_type : $dependency->entity_type;

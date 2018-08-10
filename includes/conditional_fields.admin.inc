@@ -228,7 +228,8 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
   $fields = array();
 
   foreach ($instances as $field) {
-    $fields[$field['id']] = check_plain($field['label'] . ' (' . $field['field_name'] . ')');
+    $instance_id = $field['entity_type'] . '.' . $field['entity_type'] . '.' . $field['field_name'];
+    $fields[$instance_id] = check_plain($field['label'] . ' (' . $field['field_name'] . ')');
   }
 
   asort($fields);
