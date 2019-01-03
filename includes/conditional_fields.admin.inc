@@ -160,7 +160,6 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
           $grouping_count[$dependent][$dependency['options']['grouping']]++;
         }
       }
-
       foreach ($dependees as $id => $dependency) {
         $form['table']['dependencies'][$id] = array();
         $dependee_count = count($dependees);
@@ -168,17 +167,20 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
         // Dependencies come ordered by dependent, so by adding it only to the
         // first row they will appear grouped.
         if ($first_row == TRUE) {
+          $dependent_parts = explode('.', $dependent);
+          $dependent_field_name = $dependent_parts[2];
           $form['table']['dependencies'][$id]['dependent'] = array(
-            '#markup' => check_plain($instances[$dependent]['label']) . ' (' . $dependent . ')',
+            '#markup' => check_plain($instances[$dependent_field_name]['label']) . ' (' . $dependent . ')',
             '#rowspan' => $dependee_count,
           );
 
           $first_row = FALSE;
         }
-
+        $dependee_parts = explode('.', $dependency['dependee']);
+        $dependee_field_name = $dependee_parts[2];
         $row = array(
           'dependee' => array(
-            '#markup' => check_plain($instances[$dependency['dependee']]['label']) . ' (' . $dependency['dependee'] . ')',
+            '#markup' => check_plain($instances[$dependee_field_name]['label']) . ' (' . $dependency['dependee'] . ')',
           ),
         );
 
@@ -197,7 +199,7 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
           $row['description']['#colspan'] = 2;
         }
 
-        $row['description']['#markup'] = conditional_fields_dependency_description($instances[$dependency['dependee']]['label'], $instances[$dependent]['label'], $dependency['options']);
+        $row['description']['#markup'] = conditional_fields_dependency_description($instances[$dependee_field_name]['label'], $instances[$dependent_field_name]['label'], $dependency['options']);
 
         $row['edit'] = array(
           '#type' => 'link',
@@ -315,7 +317,6 @@ function conditional_fields_dependency_add_form_submit($form, &$form_state) {
     'state' => $form_state['values']['state'],
     'condition' => $form_state['values']['condition'],
   );
-
   if (!$id = conditional_fields_dependency_insert($form_state['values']['dependee'], $form_state['values']['dependent'], $options)) {
     backdrop_set_message(t('There was an error while trying to create the dependency.'), 'error');
     return;
@@ -397,7 +398,8 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
   // want dependencies to be shared between bundles.
   // So we first load instance information to obtain the entity id, then we load
   // the entity using field_info_field().
-  $instances = field_read_instances(array('id' => $dependency['dependee']));
+  $dependee_parts = explode('.', $dependency['dependee']);
+  $instances = field_read_instances(array('entity_type' => $dependee_parts[0], 'bundle' => $dependee_parts[1]));
   $dependee_instance = array_shift($instances);
   $dependee = field_info_field($dependee_instance['field_name']);
 
@@ -409,7 +411,6 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
   }
   $dependee_instance['default_value_function'] = '';
   $dependee_instance['required'] = FALSE;
-
   $dummy_field = field_default_form($dependee_instance['entity_type'], NULL, $dependee, $dependee_instance, LANGUAGE_NONE, array(), $dummy_form, $form_state);
 
   // Save dependee name in form.

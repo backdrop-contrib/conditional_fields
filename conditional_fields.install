@@ -17,12 +17,12 @@ function conditional_fields_schema() {
         'description' => 'The primary identifier for a dependency.',
       ),
       'dependee' => array(
-        'type' => 'int',
+        'type' => 'varchar',
         'not null' => TRUE,
         'description' => 'The id of the dependee field instance.',
       ),
       'dependent' => array(
-        'type' => 'int',
+        'type' => 'varchar',
         'not null' => TRUE,
         'description' => 'The id of the dependent field instance.',
       ),

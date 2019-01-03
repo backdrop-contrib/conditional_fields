@@ -140,7 +140,8 @@ function conditional_fields_menu() {
   // Some of the following code is copied from field_ui_menu().
 
   // Create tabs for all possible bundles.
-  foreach (entity_get_info() as $entity_type => $entity_info) {
+  $entities = entity_get_info();
+  foreach ($entities as $entity_type => $entity_info) {
     if ($entity_info['fieldable']) {
       $items["admin/structure/dependencies/$entity_type"] = array(
         'title' => $entity_info['label'],
@@ -263,7 +264,6 @@ function conditional_fields_element_after_build($element, &$form_state) {
 
   // Attach dependent.
   if (isset($dependencies['dependents'][$field['#field_name']])) {
-    debug($dependencies['dependents'][$field['#field_name']]);
     foreach ($dependencies['dependents'][$field['#field_name']] as $id => $dependency) {
       if (!isset($form['#conditional_fields'][$field['#field_name']]['dependees'][$id])) {
         conditional_fields_attach_dependency($form, array('#field_name' => $dependency['dependee']), $field, $dependency['options'], $id);
@@ -1320,11 +1320,11 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
     //$instance_settings = config_get("field.instance.$entity_type.$bundle.$field_name");
 
     $result = $select->execute();
-    debug($result);
 
     foreach ($result as $dependency) {
-      $result_entity_type = $entity_type ? $entity_type : $dependency->entity_type;
-      $result_bundle = $bundle ? $bundle : $dependency->bundle;
+      $dependent_parts = explode('.', $dependency->dependent);
+      $result_entity_type = $entity_type ? $entity_type : $dependent_parts[0];
+      $result_bundle = $bundle ? $bundle : $dependent_parts[1];
 
       $options = unserialize($dependency->options);
       $options += $default_options;
