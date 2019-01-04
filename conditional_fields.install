@@ -19,11 +19,13 @@ function conditional_fields_schema() {
       'dependee' => array(
         'type' => 'varchar',
         'not null' => TRUE,
+        'length' => 128,
         'description' => 'The id of the dependee field instance.',
       ),
       'dependent' => array(
         'type' => 'varchar',
         'not null' => TRUE,
+        'length' => 128,
         'description' => 'The id of the dependent field instance.',
       ),
       'options' => array(
@@ -47,11 +49,28 @@ function conditional_fields_update_last_removed() {
 }
 
 /**
- * Implements hook_update_N().
+ * Implements hook_update_N(). Adjust schema for new ID types (rather than
+ * numeric IDs which Backdrop does not use, we adjusted to 
+ * entity_type.bundle.field_name as an ID, so the field type needs to change).
  */
 function conditional_fields_update_1000() {
   $config = config('conditional_fields.settings');
-}
+
+  db_change_field('conditional_fields', 'dependee', 'dependee', array(
+    'description' => 'The id of the dependee field instance.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => TRUE,
+    'default' => '',
+  ));
+  db_change_field('conditional_fields', 'dependent', 'dependent', array(
+    'description' => 'The id of the dependent field instance.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => TRUE,
+    'default' => '',
+  ));
+}}
 
 /**
  * Implements hook_install().
