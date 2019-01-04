@@ -70,7 +70,7 @@ function conditional_fields_update_1000() {
     'not null' => TRUE,
     'default' => '',
   ));
-}}
+}
 
 /**
  * Implements hook_install().
