@@ -8,7 +8,7 @@
  * Handle array values.
  * @see http://drupal.org/node/1149078
  */
-Drupal.states.Dependent.comparisons['Array'] = function (reference, value) {
+Backdrop.states.Dependent.comparisons['Array'] = function (reference, value) {
   // Make sure value is an array.
   if (!(typeof(value) === 'object' && (value instanceof Array))) {
     return false;
@@ -26,7 +26,7 @@ Drupal.states.Dependent.comparisons['Array'] = function (reference, value) {
 /**
  * Handle Object values.
  */
-Drupal.states.Dependent.comparisons['Object'] = function (reference, value) {
+Backdrop.states.Dependent.comparisons['Object'] = function (reference, value) {
   /* Regular expressions are objects with a RegExp property. */
   if (reference.hasOwnProperty('RegExp')) {
     reference = new RegExp(reference.RegExp);
@@ -40,7 +40,7 @@ Drupal.states.Dependent.comparisons['Object'] = function (reference, value) {
 /**
  * Focused condition.
  */
-Drupal.states.Trigger.states.focused = function(element) {
+Backdrop.states.Trigger.states.focused = function(element) {
   element.bind('focus', function () {
     element.trigger({ type: 'state:focused', value: true });
   })
@@ -48,7 +48,7 @@ Drupal.states.Trigger.states.focused = function(element) {
     element.trigger({ type: 'state:focused', value: false });
   });
 
-  Drupal.states.postponed.push($.proxy(function () {
+  Backdrop.states.postponed.push($.proxy(function () {
     element.trigger({ type: 'state:focused', value: element.is(':focus') });
   }, window));
 };
@@ -56,7 +56,7 @@ Drupal.states.Trigger.states.focused = function(element) {
 /**
  * Touched condition.
  */
-Drupal.states.Trigger.states.touched = {
+Backdrop.states.Trigger.states.touched = {
   'focus': function(e) {
     return (typeof e === 'undefined' && !this.is(':focus')) ? false : true;
   }
@@ -112,10 +112,10 @@ $(document).bind('state:visible-fade', function(e) {
 // Unchanged state. Do nothing.
 .bind('state:unchanged', function() {});
 
-Drupal.behaviors.conditionalFields = {
+Backdrop.behaviors.conditionalFields = {
   attach: function (context, settings) {
     // AJAX is not updating settings.conditionalFields correctly.
-    var conditionalFields = settings.conditionalFields || Drupal.settings.conditionalFields;
+    var conditionalFields = settings.conditionalFields || Backdrop.settings.conditionalFields;
     if (typeof conditionalFields === 'undefined' || typeof conditionalFields.effects === 'undefined') {
       return;
     }

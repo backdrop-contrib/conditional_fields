@@ -122,8 +122,8 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
     '#entity_type' => $entity_type,
     '#bundle_name' => $bundle_name,
     '#header' => array(
-      t('Dependent'),
-      t('Dependees'),
+      t('Conditional field'),
+      t('Depends on'),
       array(
         'data' => t('Description'),
         'colspan' => 2,
@@ -248,17 +248,17 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
   $form['table']['add_new_dependency'] = array(
     'dependent' => array(
       '#type' => 'select',
-      '#title' => t('Dependent'),
+      '#title' => t('Conditional field'),
       '#title_display' => 'invisible',
-      '#description' => t('Dependent'),
+      '#description' => t('Conditional field (dependent)'),
       '#options' => $fields,
-      '#prefix' => '<div class="add-new-placeholder">' . t('Add new dependency') . '</div>',
+      '#prefix' => '<div class="add-new-placeholder">' . t('Add a new dependency') . '</div>',
     ),
     'dependee' => array(
       '#type' => 'select',
-      '#title' => t('Dependee'),
+      '#title' => t('Depends on'),
       '#title_display' => 'invisible',
-      '#description' => t('Dependee'),
+      '#description' => t('Depends on (dependee)'),
       '#options' => $fields,
       '#prefix' => '<div class="add-new-placeholder">&nbsp;</div>',
     ),
@@ -268,7 +268,7 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
       '#title_display' => 'invisible',
       '#options' => $states,
       '#default_value' => 'visible',
-      '#prefix' => t('The dependent field is') . '&nbsp;<span class="description-select">',
+      '#prefix' => t('The conditional field is') . '&nbsp;<span class="description-select">',
       '#suffix' => '</span>&nbsp;' . t('when the dependee'),
     ),
     'condition' => array(
@@ -392,16 +392,9 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
   $form['#attached']['css'][] = backdrop_get_path('module', 'conditional_fields') . '/conditional_fields.css';
 
   // Retrieve needed information from the dependee instance.
-  // Since we only have the instance id here (id column of the
-  // field_config_instance table), not the entity id (id column of field_config)
-  // we can't call field_info_field_by_id. This is needed because we don't
-  // want dependencies to be shared between bundles.
-  // So we first load instance information to obtain the entity id, then we load
-  // the entity using field_info_field().
   $dependee_parts = explode('.', $dependency['dependee']);
-  $instances = field_read_instances(array('entity_type' => $dependee_parts[0], 'bundle' => $dependee_parts[1]));
-  $dependee_instance = array_shift($instances);
-  $dependee = field_info_field($dependee_instance['field_name']);
+  $dependee = field_info_field($dependee_parts[2]);
+  $dependee_instance = field_info_instance($dependee_parts[0], $dependee_parts[2], $dependee_parts[1]);
 
   // Build a dummy field widget to use as form field in single value selection
   // option.
