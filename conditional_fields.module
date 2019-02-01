@@ -260,13 +260,14 @@ function conditional_fields_element_after_build($element, &$form_state) {
 
   if (!$dependencies) {
     return $element;
-  }
+  } 
 
   // Attach dependent.
-  if (isset($dependencies['dependents'][$field['#field_name']])) {
-    foreach ($dependencies['dependents'][$field['#field_name']] as $id => $dependency) {
+  if (isset($dependencies['dependents'][$field['#entity_type'] . '.' . $field['#bundle'] . '.' . $field['#field_name']])) {
+    foreach ($dependencies['dependents'][$field['#entity_type']. '.' . $field['#bundle']. '.' . $field['#field_name']] as $id => $dependency) {
+      $dependee_field_name = array_pop(explode('.',$dependency['dependee']));
       if (!isset($form['#conditional_fields'][$field['#field_name']]['dependees'][$id])) {
-        conditional_fields_attach_dependency($form, array('#field_name' => $dependency['dependee']), $field, $dependency['options'], $id);
+        conditional_fields_attach_dependency($form, array('#field_name' => $dependee_field_name), $field, $dependency['options'], $id);
       }
     }
   }
@@ -275,10 +276,12 @@ function conditional_fields_element_after_build($element, &$form_state) {
   // TODO: collect information about every element of the dependee widget, not
   // just the first encountered. This bottom-up approach would allow us to
   // define per-element sets of dependency values.
-  if (isset($dependencies['dependees'][$field['#field_name']])) {
-    foreach ($dependencies['dependees'][$field['#field_name']] as $id => $dependency) {
+  //dpm($dependencies['dependees']);
+  if (isset($dependencies['dependees'][$field['#entity_type']. '.' . $field['#bundle']. '.' . $field['#field_name']])) {
+    foreach ($dependencies['dependees'][$field['#entity_type']. '.' . $field['#bundle']. '.' . $field['#field_name']] as $id => $dependency) {
+      $dependent_field_name = array_pop(explode('.',$dependency['dependent']));
       if (!isset($form['#conditional_fields'][$field['#field_name']]['dependents'][$id])) {
-        conditional_fields_attach_dependency($form, $field, array('#field_name' => $dependency['dependent']), $dependency['options'], $id);
+        conditional_fields_attach_dependency($form, $field, array('#field_name' => $dependent_field_name), $dependency['options'], $id);
       }
     }
   }
@@ -423,6 +426,7 @@ function conditional_fields_attach_dependency(&$form, $dependee, $dependent, $op
  */
 function conditional_fields_form_after_build($form, &$form_state) {
   // Dependencies data is attached in conditional_fields_element_after_build().
+  dpm('Why is this not firing?');
   if (empty($form['#conditional_fields'])) {
     return $form;
   }
@@ -1454,12 +1458,12 @@ function conditional_fields_element_info() {
 }
 
 /**
- * Implements hook_library().
+ * Implements hook_library_info().
  */
-function conditional_fields_library() {
+function conditional_fields_library_info() {
   return array(
     'conditional_fields' => array(
-      'tile' => 'Conditional Fields',
+      'title' => 'Conditional Fields',
       'version' => '1.0.0',
       'js' => array(
         backdrop_get_path('module', 'conditional_fields') . '/js/conditional_fields.js' => array('group' => JS_DEFAULT),
