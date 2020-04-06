@@ -263,7 +263,7 @@ function conditional_fields_element_after_build($element, &$form_state) {
   } 
 
   // Attach dependent.
-  $field_instance_id = $form['#entity_type'] . '.' . $form['#bundle'] . '.' . $field['#field_name'];
+  $field_instance_id = $entity_type . '.' . $bundle . '.' . $field['#field_name'];
   if (isset($dependencies['dependents'][$field_instance_id])) {
     foreach ($dependencies['dependents'][$field_instance_id] as $id => $dependency) {
       $dependency_parts = explode('.', $dependency['dependee']);
