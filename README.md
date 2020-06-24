@@ -7,8 +7,9 @@ The Conditional Fields module allows you to manage sets of dependencies between 
 When editing a node (or any other entity type that supports fields, like users and categories), the dependent fields are dynamically modified with the States API.
 You can, for example, define a custom “Article teaser" field that is shown only if a "Has teaser" checkbox is checked.
 
-**Limitations**
+**Limitations and Known Issues**
 
+- Due to a bug in Backdrop core, Dependents currently only work in fieldsets (and the entire fieldset is affected by the dependency). Relevant issues: [Core](https://github.com/backdrop/backdrop-issues/issues/3489); [Conditional Fields](https://github.com/backdrop-contrib/conditional_fields/issues/5).
 - Conditional Fields, for now, supports only core fields and widgets as dependee fields. Fields from other modules might work, but probably won't. Dependent fields, though, can be of any type.
 
 Installation
