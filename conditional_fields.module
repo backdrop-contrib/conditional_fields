@@ -1299,49 +1299,33 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
     $select = db_select('conditional_fields', 'cf')
       ->fields('cf', array('id', 'options', 'dependee', 'dependent'))
       ->orderBy('cf.dependent');
-    //$fci_depende = $select->join('field_config_instance', 'fci_dependee', 'cf.dependee = fci_dependee.id');
-    //$fci_dependent = $select->join('field_config_instance', 'fci_dependent', 'cf.dependent = fci_dependent.id');
-    //$select->addField($fci_depende, 'field_name', 'dependee');
-    //$select->addField($fci_dependent, 'field_name', 'dependent');
-    //$select->addField($fci_depende, 'entity_type');
-    //$select->addField($fci_depende, 'bundle');
-
-    if (0 && $entity_type) {
-      $select->condition(
-        db_and()
-          ->condition('fci_dependee.entity_type', $entity_type)
-          ->condition('fci_dependent.entity_type', $entity_type)
-      );
-    }
-
-    if (0 && $bundle) {
-      $select->condition(
-        db_and()
-          ->condition('fci_dependee.bundle', $bundle)
-          ->condition('fci_dependent.bundle', $bundle)
-      );
-    }
-    //$instance_settings = config_get("field.instance.$entity_type.$bundle.$field_name");
 
     $result = $select->execute();
 
     foreach ($result as $dependency) {
       $dependent_parts = explode('.', $dependency->dependent);
-      $result_entity_type = $entity_type ? $entity_type : $dependent_parts[0];
-      $result_bundle = $bundle ? $bundle : $dependent_parts[1];
-
-      $options = unserialize($dependency->options);
-      $options += $default_options;
-
-      $dependencies[$result_entity_type][$result_bundle]['dependents'][$dependency->dependent][$dependency->id] = array(
-        'dependee' => $dependency->dependee,
-        'options' => $options,
-      );
-
-      $dependencies[$result_entity_type][$result_bundle]['dependees'][$dependency->dependee][$dependency->id] = array(
-        'dependent' => $dependency->dependent,
-        'options' => $options,
-      );
+      $entity_type_match = (!$entity_type || ($entity_type && $dependent_parts[0] == $entity_type));
+      $bundle_match = (!$bundle || ($bundle && $dependent_parts[1] == $bundle));
+      if ($entity_type_match && $bundle_match) {
+        // Make sure there is no Entity type or Bundle specified, or that the
+        // specified Entity type or Bundle match the one that is returned
+        // in this instance.
+        $result_entity_type = $entity_type ? $entity_type : $dependent_parts[0];
+        $result_bundle = $bundle ? $bundle : $dependent_parts[1];
+  
+        $options = unserialize($dependency->options);
+        $options += $default_options;
+  
+        $dependencies[$result_entity_type][$result_bundle]['dependents'][$dependency->dependent][$dependency->id] = array(
+          'dependee' => $dependency->dependee,
+          'options' => $options,
+        );
+  
+        $dependencies[$result_entity_type][$result_bundle]['dependees'][$dependency->dependee][$dependency->id] = array(
+          'dependent' => $dependency->dependent,
+          'options' => $options,
+        );
+      }
     }
   }
 
