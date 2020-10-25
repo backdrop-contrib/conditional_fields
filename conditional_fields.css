@@ -12,6 +12,9 @@ table.conditional-fields-overview .form-submit {
 table.conditional-fields-overview .description-select .form-type-select {
   display: inline;
 }
+table.conditional-fields-overview .form-type-select select {
+  max-width: 250px;
+}
 
 /* Dependency edit */
 
