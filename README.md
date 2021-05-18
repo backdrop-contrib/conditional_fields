@@ -9,7 +9,7 @@ You can, for example, define a custom “Article teaser" field that is shown onl
 
 **Limitations and Known Issues**
 
-- Due to a bug in Backdrop core, Dependents currently only work in fieldsets (and the entire fieldset is affected by the dependency). Relevant issues: [Core](https://github.com/backdrop/backdrop-issues/issues/3489); [Conditional Fields](https://github.com/backdrop-contrib/conditional_fields/issues/5).
+- Due to a bug in Backdrop core, Dependents currently only work in fieldsets (and the entire fieldset is affected by the dependency). Adding a fieldset to put fields into requires the Field Group module. [Further details are available on the Wiki](https://github.com/backdrop-contrib/conditional_fields/wiki/Field-Group-workaround). Relevant issues: [Core](https://github.com/backdrop/backdrop-issues/issues/3489); [Conditional Fields](https://github.com/backdrop-contrib/conditional_fields/issues/5).
 - Conditional Fields, for now, supports only core fields and widgets as dependee fields. Fields from other modules might work, but probably won't. Dependent fields, though, can be of any type.
 
 Installation
