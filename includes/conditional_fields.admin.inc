@@ -130,7 +130,6 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
       ),
       array(
         'data' => t('Operations'),
-        'colspan' => 2,
       ),
     ),
     '#attributes' => array(
@@ -201,23 +200,23 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
 
         $row['description']['#markup'] = conditional_fields_dependency_description($instances[$dependee_field_name]['label'], $instances[$dependent_field_name]['label'], $dependency['options']);
 
-        $row['edit'] = array(
-          '#type' => 'link',
-          '#title' => t('edit'),
-          '#href' => 'admin/structure/dependencies/edit/' . $id,
-          '#options' => array(
-            'query' => $destination,
-            'attributes' => array('title' => t('Edit dependency settings.')),
-          ),
-          '#query' => backdrop_get_destination(),
+        $operations = array();
+
+        $operations['edit'] = array(
+          'title' => t('Edit'),
+          'href' => 'admin/structure/dependencies/edit/' . $id,
+          'query' => $destination,
         );
-        $row['delete'] = array(
-          '#type' => 'link',
-          '#title' => t('delete'),
-          '#href' => 'admin/structure/dependencies/delete/' . $id,
-          '#options' => array(
-            'query' => $destination,
-            'attributes' => array('title' => t('Delete dependency.')),
+        $operations['delete'] = array(
+          'title' => t('Delete'),
+          'href' => 'admin/structure/dependencies/delete/' . $id,
+          'query' => $destination,
+        );
+
+        $row['operations'] = array(
+          'data' => array(
+            '#type' => 'dropbutton',
+            '#links' => $operations,
           ),
         );
 
