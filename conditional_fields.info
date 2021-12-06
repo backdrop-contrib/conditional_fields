@@ -5,4 +5,6 @@ type = module
 package = Fields
 
 dependencies[] = field
+dependencies[] = system (>=1.20.3)
+
 configure = admin/structure/dependencies
