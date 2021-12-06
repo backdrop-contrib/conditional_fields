@@ -50,7 +50,7 @@ function conditional_fields_update_last_removed() {
 
 /**
  * Implements hook_update_N(). Adjust schema for new ID types (rather than
- * numeric IDs which Backdrop does not use, we adjusted to 
+ * numeric IDs which Backdrop does not use, we adjusted to
  * entity_type.bundle.field_name as an ID, so the field type needs to change).
  */
 function conditional_fields_update_1000() {
@@ -70,11 +70,4 @@ function conditional_fields_update_1000() {
     'not null' => TRUE,
     'default' => '',
   ));
-}
-
-/**
- * Implements hook_install().
- */
-function conditional_fields_install() {
-  // Dynamically generated variable data was detected.
 }
