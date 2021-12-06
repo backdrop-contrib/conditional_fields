@@ -49,9 +49,8 @@ function conditional_fields_update_last_removed() {
 }
 
 /**
- * Implements hook_update_N(). Adjust schema for new ID types (rather than
- * numeric IDs which Backdrop does not use, we adjusted to
- * entity_type.bundle.field_name as an ID, so the field type needs to change).
+ * Adjust schema for new `entity_type.bundle.field_name` ID types (rather than
+ * numeric IDs which Backdrop does not use).
  */
 function conditional_fields_update_1000() {
   $config = config('conditional_fields.settings');
