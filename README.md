@@ -1,16 +1,25 @@
 Conditional Fields
 ======================
 
-Define dependencies between fields based on their states and values. Conditional Fields is basically an user interface for the States API, plus the ability to hide fields on certain conditions when viewing content.
+Define dependencies between fields based on their states and values. Conditional
+Fields is basically an user interface for the States API, plus the ability to
+hide fields on certain conditions when viewing content.
 
-The Conditional Fields module allows you to manage sets of dependencies between fields. When a field is "dependent", it will only be available for editing and displayed if the state of the "dependee" field matches the right condition.
-When editing a node (or any other entity type that supports fields, like users and categories), the dependent fields are dynamically modified with the States API.
-You can, for example, define a custom “Article teaser" field that is shown only if a "Has teaser" checkbox is checked.
+The Conditional Fields module allows you to manage sets of dependencies between
+fields. When a field is "dependent", it will only be available for editing and
+displayed if the state of the "dependee" field matches the right condition.
+When editing a node (or any other entity type that supports fields, like users
+and categories), the dependent fields are dynamically modified with the States
+API.
+
+You can, for example, define a custom “Article teaser" field that is shown only
+if a "Has teaser" checkbox is checked.
 
 **Limitations and Known Issues**
 
-- Due to a bug in Backdrop core, Dependents currently only work in fieldsets (and the entire fieldset is affected by the dependency). Adding a fieldset to put fields into requires the Field Group module. [Further details are available on the Wiki](https://github.com/backdrop-contrib/conditional_fields/wiki/Field-Group-workaround). Relevant issues: [Core](https://github.com/backdrop/backdrop-issues/issues/3489); [Conditional Fields](https://github.com/backdrop-contrib/conditional_fields/issues/5).
-- Conditional Fields, for now, supports only core fields and widgets as dependee fields. Fields from other modules might work, but probably won't. Dependent fields, though, can be of any type.
+- Conditional Fields, for now, supports only core fields and widgets as dependee
+fields. Fields from other modules might work, but probably won't. Dependent
+fields, though, can be of any type.
 
 Installation
 ------------
@@ -20,7 +29,8 @@ Installation
 Configuration and Usage
 -----------------------
 
-Users with the "administer dependencies" permission can administer dependencies at admin/structure/dependencies.
+Users with the "administer dependencies" permission can administer dependencies
+at **admin/structure/dependencies**.
 
 More details may be found (or contributed to) in the [Wiki](https://github.com/backdrop-contrib/conditional_fields/issues)
 
