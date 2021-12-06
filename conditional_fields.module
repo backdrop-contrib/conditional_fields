@@ -260,7 +260,7 @@ function conditional_fields_element_after_build($element, &$form_state) {
 
   if (!$dependencies) {
     return $element;
-  } 
+  }
 
   // Attach dependent.
   $field_instance_id = $entity_type . '.' . $bundle . '.' . $field['#field_name'];
@@ -1312,15 +1312,15 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
         // in this instance.
         $result_entity_type = $entity_type ? $entity_type : $dependent_parts[0];
         $result_bundle = $bundle ? $bundle : $dependent_parts[1];
-  
+
         $options = unserialize($dependency->options);
         $options += $default_options;
-  
+
         $dependencies[$result_entity_type][$result_bundle]['dependents'][$dependency->dependent][$dependency->id] = array(
           'dependee' => $dependency->dependee,
           'options' => $options,
         );
-  
+
         $dependencies[$result_entity_type][$result_bundle]['dependees'][$dependency->dependee][$dependency->id] = array(
           'dependent' => $dependency->dependent,
           'options' => $options,
@@ -1995,26 +1995,10 @@ function conditional_fields_module_implements_alter(&$implementations, $hook) {
     // The element_info_alter hook should attempt to add its #after_build
     // callback last to ensure that conditional_fields_form_validate runs after
     // all other validation routines.
-    // The Features hook must be processed when the fields actually exist.
-    if ($hook == 'element_info_alter' || $hook == 'features_api') {
+    if ($hook == 'element_info_alter') {
       $group = $implementations['conditional_fields'];
       unset($implementations['conditional_fields']);
       $implementations['conditional_fields'] = $group;
     }
   }
-}
-
-/**
- * Implements hook_features_api().
- */
-function conditional_fields_features_api() {
-  return array(
-    'conditional_fields' => array(
-      'name' => t('Conditional Fields'),
-      'default_hook' => 'conditional_fields_default_fields',
-      'default_file' => FEATURES_DEFAULTS_INCLUDED,
-      'feature_source' => TRUE,
-      'file' => backdrop_get_path('module', 'conditional_fields') . '/includes/conditional_fields.features.inc',
-    ),
-  );
 }
