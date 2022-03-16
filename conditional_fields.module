@@ -1171,7 +1171,7 @@ function conditional_fields_evaluate_dependency($context, $values, $options) {
 
     // Simple case: both values are strings or integers. Should never happen in
     // view context, but does no harm to check anyway.
-    if (!is_array($values) || (is_array($values) && (empty($values) || in_array($options['condition'], ['checked', '!checked'])))) {
+    if (!is_array($values) || (is_array($values) && (empty($values)))) {
       // Options elements consider "_none" value same as empty.
       $values = $values === '_none' ? '' : $values;
 
