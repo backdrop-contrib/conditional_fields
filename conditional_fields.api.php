@@ -49,7 +49,7 @@ function hook_conditional_fields_states_alter(&$states) {
  * Alter the list of visual effects available to states.
  *
  * Visual effects may provide settings that are passed to the js object
- * Drupal.settings.conditionalFields.effects and that are automatically
+ * Backdrop.settings.conditionalFields.effects and that are automatically
  * made available to the corresponding state change event under event.effect.
  *
  * Dependent field events associated with effects have the effect name appended
@@ -101,7 +101,7 @@ function hook_conditional_fields_effects_alter(&$effects) {
  * These are callbacks that are executed by the States API to check if a
  * dependee field matches the required condition.
  * Modules adding conditions using this hook should also add the corresponding
- * callback to the Drupal.states.Trigger.states object.
+ * callback to the Backdrop.states.Trigger.states object.
  *
  * @param $conditions
  *   An associative array of conditions, with names as keys and labels as
@@ -110,7 +110,7 @@ function hook_conditional_fields_effects_alter(&$effects) {
 function hook_conditional_fields_conditions_alter(&$conditions) {
   // Add a special condition that checks if a field value is an integer greater
   // than 0. The javascript callback could be something like:
-  // Drupal.states.Trigger.states.positiveInteger = {
+  // Backdrop.states.Trigger.states.positiveInteger = {
   //   'keyup': function () {
   //     var val = this.val(),
   //         int = parseInt(val);

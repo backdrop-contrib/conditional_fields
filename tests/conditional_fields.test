@@ -5,7 +5,7 @@
  * Test Conditional Fields functionality and UI.
  */
 
-class ConditionalFieldsTestCase extends DrupalWebTestCase {
+class ConditionalFieldsTestCase extends BackdropWebTestCase {
   protected $dependee_on_value;
   protected $dependee_off_value;
   protected $dependents;
@@ -23,13 +23,13 @@ class ConditionalFieldsTestCase extends DrupalWebTestCase {
     parent::setUp('conditional_fields_test', 'list', 'text', 'number', 'taxonomy', 'image');
 
     // Create and log in user.
-    $web_user = $this->drupalCreateUser(array('create conditional_fields_test content', 'edit any conditional_fields_test content'));
-    $this->drupalLogin($web_user);
+    $web_user = $this->backdropCreateUser(array('create conditional_fields_test content', 'edit any conditional_fields_test content'));
+    $this->backdropLogin($web_user);
 
     // Create a vocabulary and two terms to test the term reference field.
     $vocabulary = new stdClass();
     $vocabulary->name = $this->randomName();
-    $vocabulary->machine_name = drupal_strtolower($this->randomName());
+    $vocabulary->machine_name = backdrop_strtolower($this->randomName());
     taxonomy_vocabulary_save($vocabulary);
     $term = new stdClass();
     $term->name = 'Foo';
@@ -68,7 +68,7 @@ class ConditionalFieldsTestCase extends DrupalWebTestCase {
         continue;
       }
       foreach ($widget_info['field types'] as $field_type) {
-        $field_name = 'dependent_' . drupal_strtolower($this->randomName());
+        $field_name = 'dependent_' . backdrop_strtolower($this->randomName());
         $dependent = array(
           'field_name' => $field_name,
           'type' => $field_type,
@@ -154,7 +154,7 @@ class ConditionalFieldsTestCase extends DrupalWebTestCase {
     $edit = array(
       "dependee[$langcode]" => $this->dependee_on_value,
     );
-    $this->drupalPost('node/add/conditional-fields-test', $edit, t('Save'));
+    $this->backdropPost('node/add/conditional-fields-test', $edit, t('Save'));
 
     foreach ($this->dependents as $dependent) {
       // Skip fields that always have a default value.
@@ -206,7 +206,7 @@ class ConditionalFieldsTestCase extends DrupalWebTestCase {
         // $edit[$dependent['field']['field_name'] . "[$langcode][0][fid]"] = '1';
       }
     }
-    $this->drupalPost('node/add/conditional-fields-test', $edit, t('Save'));
+    $this->backdropPost('node/add/conditional-fields-test', $edit, t('Save'));
     $this->assertRaw(t('@type %title has been created.', array('@type' => 'Conditional Fields Test Node Type', '%title' => '')), 'Node was created with triggered dependencies.');
     // Verify that the fields are visible on node view.
     foreach ($this->dependents as $dependent) {
@@ -217,7 +217,7 @@ class ConditionalFieldsTestCase extends DrupalWebTestCase {
     $edit = array(
       "dependee[$langcode]" => $this->dependee_off_value,
     );
-    $this->drupalPost('node/1/edit', $edit, t('Save'));
+    $this->backdropPost('node/1/edit', $edit, t('Save'));
     $this->assertRaw(t('@type %title has been updated.', array('@type' => 'Conditional Fields Test Node Type', '%title' => '')), 'Node was updated with untriggered dependencies.');
     // Verify that fields are invisible on node view.
     foreach ($this->dependents as $dependent) {
@@ -226,7 +226,7 @@ class ConditionalFieldsTestCase extends DrupalWebTestCase {
   }
 }
 
-class ConditionalFieldsUITestCase extends DrupalWebTestCase {
+class ConditionalFieldsUITestCase extends backdropWebTestCase {
 
   public static function getInfo() {
     return array(
@@ -240,8 +240,8 @@ class ConditionalFieldsUITestCase extends DrupalWebTestCase {
     parent::setUp('conditional_fields_test', 'list', 'text');
 
     // Create and log in user.
-    $web_user = $this->drupalCreateUser(array('access administration pages', 'administer content types', 'administer dependencies'));
-    $this->drupalLogin($web_user);
+    $web_user = $this->backdropCreateUser(array('access administration pages', 'administer content types', 'administer dependencies'));
+    $this->backdropLogin($web_user);
 
     // Create a field that will be used as a dependee.
     $dependee = array(
@@ -280,10 +280,10 @@ class ConditionalFieldsUITestCase extends DrupalWebTestCase {
    */
   public function testDependenciesOverview() {
     $dependee = field_read_instance('node', 'dependee', 'conditional_fields_test');
-    $this->drupalGet('admin/structure');
+    $this->backdropGet('admin/structure');
     $this->clickLink(t('Field dependencies'));
     $this->clickLink(t('Node'));
-    $this->drupalGet('admin/structure/types/manage/conditional-fields-test');
+    $this->backdropGet('admin/structure/types/manage/conditional-fields-test');
     $this->clickLink(t('Manage dependencies'));
     $this->assertFieldByName('dependee', $dependee['id'], 'The dependee selection field is in the content type dependencies page.');
     $this->assertFieldByName('dependent', $dependee['id'], 'The dependent selection field is in the content type dependencies page.');
@@ -300,14 +300,14 @@ class ConditionalFieldsUITestCase extends DrupalWebTestCase {
       'dependee' => $dependee['id'],
       'dependent' => $dependent['id'],
     );
-    $this->drupalPost('admin/structure/types/manage/conditional-fields-test/dependencies', $edit, t('Add dependency'), array(), array(), 'conditional-fields-dependency-add-form-node-conditional-fields-test');
+    $this->backdropPost('admin/structure/types/manage/conditional-fields-test/dependencies', $edit, t('Add dependency'), array(), array(), 'conditional-fields-dependency-add-form-node-conditional-fields-test');
 
     // Edit dependency.
     $edit = array(
       'values_set' => CONDITIONAL_FIELDS_DEPENDENCY_VALUES_AND,
       'values' => 'on',
     );
-    $this->drupalPost(NULL, $edit, t('Save settings'), array('query' => array('destination' => 'admin/structure/types/manage/conditional-fields-test/dependencies')));
+    $this->backdropPost(NULL, $edit, t('Save settings'), array('query' => array('destination' => 'admin/structure/types/manage/conditional-fields-test/dependencies')));
     $this->assertRaw(t('%dependent_name is !state when %dependee_name has all the values: @values.', array(
       '%dependent_name' => t('Label of the dependent field'),
       '!state' => 'visible',
@@ -317,7 +317,7 @@ class ConditionalFieldsUITestCase extends DrupalWebTestCase {
 
     // Delete dependency.
     $this->clickLink(t('delete'));
-    $this->drupalPost(NULL, array(), t('Delete dependency'), array('query' => array('destination' => 'admin/structure/types/manage/conditional-fields-test/dependencies')));
+    $this->backdropPost(NULL, array(), t('Delete dependency'), array('query' => array('destination' => 'admin/structure/types/manage/conditional-fields-test/dependencies')));
     $this->assertText(t('The dependency has been deleted.'));
   }
 }
