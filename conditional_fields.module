@@ -84,6 +84,11 @@ define('CONDITIONAL_FIELDS_FIELD_EDIT_HIDE_UNTRIGGERED_ORPHAN', 2);
 define('CONDITIONAL_FIELDS_FIELD_EDIT_RESET_UNTRIGGERED', 3);
 
 /**
+ * Load include files for admin pages.
+ */
+module_load_include('inc', 'conditional_fields', 'includes/conditional_fields.admin');
+
+/**
  * Implements hook_permission().
  */
 function conditional_fields_permission() {
@@ -706,7 +711,7 @@ function conditional_fields_dependent_validate($element, &$form_state, $form) {
           if ($triggered && $state == 'required') {
             $show_previous_errors = FALSE;
             $key_exists = NULL;
-            $input_state = drupal_array_get_nested_value($form_state['values'], $dependent['#parents'], $key_exists);
+            $input_state = backdrop_array_get_nested_value($form_state['values'], $dependent['#parents'], $key_exists);
 
             if ($key_exists) {
               // Remove the 'value' of the 'add more' button.
@@ -2111,26 +2116,10 @@ function conditional_fields_module_implements_alter(&$implementations, $hook) {
     // The element_info_alter hook should attempt to add its #after_build
     // callback last to ensure that conditional_fields_form_validate runs after
     // all other validation routines.
-    // The Features hook must be processed when the fields actually exist.
-    if ($hook == 'element_info_alter' || $hook == 'features_api') {
+    if ($hook == 'element_info_alter') {
       $group = $implementations['conditional_fields'];
       unset($implementations['conditional_fields']);
       $implementations['conditional_fields'] = $group;
     }
   }
-}
-
-/**
- * Implements hook_features_api().
- */
-function conditional_fields_features_api() {
-  return array(
-    'conditional_fields' => array(
-      'name' => t('Conditional Fields'),
-      'default_hook' => 'conditional_fields_default_fields',
-      'default_file' => FEATURES_DEFAULTS_INCLUDED,
-      'feature_source' => TRUE,
-      'file' => backdrop_get_path('module', 'conditional_fields') . '/includes/conditional_fields.features.inc',
-    ),
-  );
 }
