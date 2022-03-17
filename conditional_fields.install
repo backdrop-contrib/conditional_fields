@@ -49,24 +49,48 @@ function conditional_fields_update_last_removed() {
 }
 
 /**
- * Adjust schema for new `entity_type.bundle.field_name` ID types (rather than
- * numeric IDs which Backdrop does not use).
+ * Adjust schema and data for new field instance identifier format.
  */
 function conditional_fields_update_1000() {
   $config = config('conditional_fields.settings');
+  if (db_table_exists('conditional_fields')) {
+    db_change_field('conditional_fields', 'dependee', 'dependee', array(
+      'description' => 'The id of the dependee field instance.',
+      'type' => 'varchar',
+      'length' => 128,
+      'not null' => TRUE,
+      'default' => '',
+    ));
+    db_change_field('conditional_fields', 'dependent', 'dependent', array(
+      'description' => 'The id of the dependent field instance.',
+      'type' => 'varchar',
+      'length' => 128,
+      'not null' => TRUE,
+      'default' => '',
+    ));
 
-  db_change_field('conditional_fields', 'dependee', 'dependee', array(
-    'description' => 'The id of the dependee field instance.',
-    'type' => 'varchar',
-    'length' => 128,
-    'not null' => TRUE,
-    'default' => '',
-  ));
-  db_change_field('conditional_fields', 'dependent', 'dependent', array(
-    'description' => 'The id of the dependent field instance.',
-    'type' => 'varchar',
-    'length' => 128,
-    'not null' => TRUE,
-    'default' => '',
-  ));
+    $select = db_select('conditional_fields', 'cf');
+    $select->join('field_config_instance', 'dependee', 'cf.dependee = dependee.id');
+    $select->join('field_config_instance', 'dependent', 'cf.dependent = dependent.id');
+    $select->fields('cf', array('id', 'options', 'dependee', 'dependent'));
+    $select->addField('dependee', 'field_name', 'dependee_field_name');
+    $select->addField('dependee', 'entity_type', 'dependee_entity_type');
+    $select->addField('dependee', 'bundle', 'dependee_bundle');
+    $select->addField('dependent', 'field_name', 'dependent_field_name');
+    $select->addField('dependent', 'entity_type', 'dependent_entity_type');
+    $select->addField('dependent', 'bundle', 'dependent_bundle');
+    $select->orderBy('cf.dependent');
+    $result = $select->execute();
+    foreach ($result as $conditional) {
+      // Update the ID with the new format.
+      db_update('conditional_fields')
+        ->fields(array(
+          'dependee' => $conditional->dependee_entity_type . '.' . $conditional->dependee_bundle . '.' . $conditional->dependee_field_name,
+          'dependent' => $conditional->dependent_entity_type . '.' . $conditional->dependent_bundle . '.' . $conditional->dependent_field_name,
+        ))
+        ->condition('id', $conditional->id)
+        ->execute();
+    }
+  }
+
 }
