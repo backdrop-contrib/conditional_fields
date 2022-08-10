@@ -929,12 +929,15 @@ function conditional_fields_entity_view_alter(&$build, $type) {
   $evaluated_dependents = array();
 
   foreach ($dependencies['dependents'] as $dependent => $dependency) {
+    $dependent_parts = explode('.', $dependent);
+    $dependent = $dependent_parts[2];
     if (empty($build[$dependent]['#access'])) {
       continue;
     }
 
     foreach ($dependency as $dependency_options) {
-      $dependee = $dependency_options['dependee'];
+      $dependee_parts = explode('.', $dependency_options['dependee']);
+      $dependee = $dependee_parts[2];
       $options = $dependency_options['options'];
 
       // We can interface with the States API only through the Value condition.
