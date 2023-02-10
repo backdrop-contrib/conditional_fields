@@ -2,7 +2,7 @@ Conditional Fields
 ======================
 
 Define dependencies between fields based on their states and values. Conditional
-Fields is basically an user interface for the States API, plus the ability to
+Fields is basically a user interface for the States API, plus the ability to
 hide fields on certain conditions when viewing content.
 
 The Conditional Fields module allows you to manage sets of dependencies between
