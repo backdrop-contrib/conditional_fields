@@ -52,7 +52,6 @@ function conditional_fields_update_last_removed() {
  * Adjust schema and data for new field instance identifier format.
  */
 function conditional_fields_update_1000() {
-  $config = config('conditional_fields.settings');
   if (db_table_exists('conditional_fields')) {
     db_change_field('conditional_fields', 'dependee', 'dependee', array(
       'description' => 'The id of the dependee field instance.',
