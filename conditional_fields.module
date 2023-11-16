@@ -118,6 +118,7 @@ function conditional_fields_menu() {
     'page callback' => 'conditional_fields_dependencies_overview_page',
     'access arguments' => array('administer dependencies'),
     'file' => 'includes/conditional_fields.admin.inc',
+    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/structure/dependencies/overview'] = array(
