@@ -90,8 +90,8 @@ function conditional_fields_update_1100() {
       );
       $uuid = new Uuid();
       $config->set($uuid->generate(), $formatted_dependee);
+      $config->save();
     }
-    $config->save();
     db_drop_table('conditional_fields');
   }
 }
