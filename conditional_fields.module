@@ -187,6 +187,18 @@ function conditional_fields_menu() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function conditional_fields_config_info() {
+  $prefixes['conditional_field'] = array(
+    'name_key' => 'type',
+    'label_key' => 'label',
+    'group' => t('Conditional Fields'),
+  );
+  return $prefixes;
+}
+
+ /**
  * Implements hook_forms().
  *
  * Maps all dependency add forms to the same callback.
