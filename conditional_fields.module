@@ -268,11 +268,9 @@ function conditional_fields_element_after_build($element, &$form_state) {
   }
 
   // Attach dependent.
-  $field_instance_id = $entity_type . '.' . $bundle . '.' . $field['#field_name'];
-  if (isset($dependencies['dependents'][$field_instance_id])) {
-    foreach ($dependencies['dependents'][$field_instance_id] as $id => $dependency) {
-      $dependency_parts = explode('.', $dependency['dependee']);
-      $dependee_field_name = array_pop($dependency_parts);
+  if (isset($dependencies['dependents'][$field['#field_name']])) {
+    foreach ($dependencies['dependents'][$field['#field_name']] as $id => $dependency) {
+      $dependee_field_name = $dependency['dependee'];
       if (!isset($form['#conditional_fields'][$field['#field_name']]['dependees'][$id])) {
         conditional_fields_attach_dependency($form, array('#field_name' => $dependee_field_name), $field, $dependency['options'], $id);
       }
@@ -283,11 +281,10 @@ function conditional_fields_element_after_build($element, &$form_state) {
   // TODO: collect information about every element of the dependee widget, not
   // just the first encountered. This bottom-up approach would allow us to
   // define per-element sets of dependency values.
-  if (isset($dependencies['dependees'][$field_instance_id])) {
-    foreach ($dependencies['dependees'][$field_instance_id] as $id => $dependency) {
-      $dependent_parts = explode('.', $dependency['dependent']);
-      $dependent_field_name = array_pop($dependent_parts);
-      if (!isset($form['#conditional_fields'][$field['#field_name']]['dependents'][$id])) {
+  if (isset($dependencies['dependees'][$field['#field_name']])) {
+    foreach ($dependencies['dependees'][$field['#field_name']] as $id => $dependency) {
+    $dependent_field_name = $dependency['dependent'];
+    if (!isset($form['#conditional_fields'][$field['#field_name']]['dependents'][$id])) {
         conditional_fields_attach_dependency($form, $field, array('#field_name' => $dependent_field_name), $dependency['options'], $id);
       }
     }
@@ -929,15 +926,12 @@ function conditional_fields_entity_view_alter(&$build, $type) {
   $evaluated_dependents = array();
 
   foreach ($dependencies['dependents'] as $dependent => $dependency) {
-    $dependent_parts = explode('.', $dependent);
-    $dependent = $dependent_parts[2];
-    if (empty($build[$dependent]['#access'])) {
+    if (!empty($build[$dependent]) && empty($build[$dependent]['#access'])) {
       continue;
     }
 
     foreach ($dependency as $dependency_options) {
-      $dependee_parts = explode('.', $dependency_options['dependee']);
-      $dependee = $dependee_parts[2];
+      $dependee = $dependency_options['dependee'];
       $options = $dependency_options['options'];
 
       // We can interface with the States API only through the Value condition.
@@ -1399,7 +1393,7 @@ function conditional_fields_dependency_default_options() {
 }
 
 /**
- * Loads all dependencies from the database.
+ * Loads all dependencies from configuration.
  *
  * The result can be filtered by providing an entity type and a bundle name.
  */
@@ -1420,35 +1414,41 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
     }
     $default_options = conditional_fields_dependency_default_options();
 
-    $select = db_select('conditional_fields', 'cf')
-      ->fields('cf', array('id', 'options', 'dependee', 'dependent'))
-      ->orderBy('cf.dependent');
+    $conditional_names = config_get_names_with_prefix('conditional_field.');
+    $conditionals = config_load_multiple($conditional_names);
+    $skip_keys = array(
+      'label',
+      'type',
+    );
+    foreach ($conditionals as $dependency) {
+      $dependent_parts = explode('.', $dependency['type']);
+      // Cycle through to pull out one or more dependees for this dependent.
+      foreach ($dependency as $id => $dependee) {
+        if (in_array($id, $skip_keys)) {
+          continue;
+        }
+        $entity_type_match = (!$entity_type || ($entity_type && $dependent_parts[0] == $entity_type));
+        $bundle_match = (!$bundle || ($bundle && $dependent_parts[1] == $bundle));
+        if ($entity_type_match && $bundle_match) {
+          // Make sure there is no Entity type or Bundle specified, or that the
+          // specified Entity type or Bundle match the one that is returned
+          // in this instance.
+          $result_entity_type = $entity_type ? $entity_type : $dependent_parts[0];
+          $result_bundle = $bundle ? $bundle : $dependent_parts[1];
 
-    $result = $select->execute();
+          $options = $dependee['options'];
+          $options += $default_options;
 
-    foreach ($result as $dependency) {
-      $dependent_parts = explode('.', $dependency->dependent);
-      $entity_type_match = (!$entity_type || ($entity_type && $dependent_parts[0] == $entity_type));
-      $bundle_match = (!$bundle || ($bundle && $dependent_parts[1] == $bundle));
-      if ($entity_type_match && $bundle_match) {
-        // Make sure there is no Entity type or Bundle specified, or that the
-        // specified Entity type or Bundle match the one that is returned
-        // in this instance.
-        $result_entity_type = $entity_type ? $entity_type : $dependent_parts[0];
-        $result_bundle = $bundle ? $bundle : $dependent_parts[1];
+          $dependencies[$result_entity_type][$result_bundle]['dependents'][$dependent_parts[2]][$id] = array(
+            'dependee' => $dependee['dependee'],
+            'options' => $options,
+          );
 
-        $options = unserialize($dependency->options);
-        $options += $default_options;
-
-        $dependencies[$result_entity_type][$result_bundle]['dependents'][$dependency->dependent][$dependency->id] = array(
-          'dependee' => $dependency->dependee,
-          'options' => $options,
-        );
-
-        $dependencies[$result_entity_type][$result_bundle]['dependees'][$dependency->dependee][$dependency->id] = array(
-          'dependent' => $dependency->dependent,
-          'options' => $options,
-        );
+          $dependencies[$result_entity_type][$result_bundle]['dependees'][$dependee['dependee']][$id] = array(
+            'dependent' => $dependent_parts[2],
+            'options' => $options,
+          );
+        }
       }
     }
   }
@@ -1465,45 +1465,71 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
 }
 
 /**
- * Menu argument loader: loads a dependency from the database.
+ * Menu argument loader: loads a dependency from configuration.
  *
  * @param $id
- *   The dependency ID.
+ *   The dependency ID in the form `{entity_type}.{bundle}.{dependent}.{id}`.
  *
  * @return
  *   A fully populated dependency array, complete with its conditions, or FALSE
  *   if the dependency is not found.
  */
 function conditional_fields_dependency_load($id) {
-  $result = db_select('conditional_fields', 'cf')
-    ->fields('cf', array('id', 'dependee', 'dependent', 'options'))
-    ->condition('id', $id)
-    ->execute()
-    ->fetchAssoc();
+  $parts = explode('.', $id);
+  $entity_type = check_plain($parts[0]);
+  $bundle = check_plain($parts[1]);
+  $dependent = check_plain($parts[2]);
+  $id = check_plain($parts[3]);
 
+  $result = config_get('conditional_field.' . $entity_type . '.' . $bundle . '.' . $dependent . '.settings', $id);
   if (!$result) {
     return FALSE;
   }
 
-  $result['options'] = unserialize($result['options']) + conditional_fields_dependency_default_options();
+  $result['dependent'] = $dependent;
+  $result['id'] = $id;
+  $result['entity_type'] = $entity_type;
+  $result['bundle'] = $bundle;
+  $result['options'] += conditional_fields_dependency_default_options();
 
   return $result;
 }
 
 /**
- * Inserts a new dependency in the database.
- * For the format of $options,
+ * Inserts a new dependency in the configuration.
+ *
+ * @param array $dependency
+ *  Keys:
+ *    dependee
+ *    dependent
+ *    entity_type
+ *    bundle
+ *    options
+ *
+ * For the format of $dependency['options'],
  * @see conditional_fields_dependency_default_options()
  */
-function conditional_fields_dependency_insert($dependee_id, $dependent_id, $options = array()) {
-  $options += conditional_fields_dependency_default_options();
-  $dependency = array(
-    'dependee' => $dependee_id,
-    'dependent' => $dependent_id,
-    'options' => $options,
-  );
+function conditional_fields_dependency_insert($dependency) {
+  $dependency['options'] += conditional_fields_dependency_default_options();
+  $entity_type = $dependency['entity_type'];
+  $bundle = $dependency['bundle'];
+  $dependent = $dependency['dependent'];
+  unset($dependency['entity_type'], $dependency['bundle'], $dependency['dependent']);
+  $config = config('conditional_field.' . $entity_type . '.' . $bundle . '.' . $dependent . '.settings');
+  if ($config->isNew()) {
+    $config->set('type', $entity_type . '.' . $bundle . '.' . $dependent);
+    $config->set('label', t('Conditionals for Field @field - Entity @entity; Bundle @bundle', array(
+      '@field' => $dependent,
+      '@entity' => $entity_type,
+      '@bundle' => $bundle,
+    )));
+  }
+  $uuid = new Uuid();
+  $dependency['id'] = $uuid->generate();
+  $config->set($dependency['id'], $dependency);
+  $config->save();
 
-  if (backdrop_write_record('conditional_fields', $dependency)) {
+  if (!$config->isNew()) {
     return $dependency['id'];
   }
 }
@@ -1512,21 +1538,23 @@ function conditional_fields_dependency_insert($dependee_id, $dependent_id, $opti
  * Updates a dependency.
  */
 function conditional_fields_dependency_update($dependency) {
-  backdrop_write_record('conditional_fields', $dependency, 'id');
+  $entity_type = $dependency['entity_type'];
+  $bundle = $dependency['bundle'];
+  $dependent = $dependency['dependent'];
+  $id = $dependency['id'];
+  unset($dependency['entity_type'], $dependency['bundle'], $dependency['dependent'], $dependency['id']);
+  config_set('conditional_field.' . $entity_type . '.' . $bundle . '.' . $dependent . '.settings', $id, $dependency);
 }
 
 /**
  * Deletes dependencies.
  */
-function conditional_fields_dependency_delete($dependency_ids) {
-  $or = db_or();
-  foreach ($dependency_ids as $id) {
-    $or = $or->condition('id', $id);
+function conditional_fields_dependency_delete($dependencies) {
+  foreach ($dependencies as $dependency) {
+    $config = config('conditional_field.' . $dependency['entity_type'] . '.' . $dependency['bundle'] . '.' . $dependency['dependent'] . '.settings');
+    $config->clear($dependency['id']);
+    $config->save();
   }
-
-  return db_delete('conditional_fields')
-    ->condition($or)
-    ->execute();
 }
 
 /**
@@ -1535,13 +1563,10 @@ function conditional_fields_dependency_delete($dependency_ids) {
  * Delete any dependency associated with the deleted instance.
  */
 function conditional_fields_field_delete_instance($instance) {
-  $id = $instance['entity_type'] . '.' . $instance['bundle'] . '.' . $instance['field_name'];
-  db_delete('conditional_fields')
-    ->condition(
-      db_or()
-        ->condition('dependee', $id)
-        ->condition('dependent', $id))
-    ->execute();
+  $config = config('conditional_field.' . $instance['entity_type'] . '.' . $instance['bundle'] . '.' . $instance['field_name'] . '.settings');
+  if (!$config->isNew()) {
+    $config->delete();
+  }
 }
 
 /**
