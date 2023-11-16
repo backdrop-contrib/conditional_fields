@@ -23,21 +23,31 @@ class ConditionalFieldsTestCase extends BackdropWebTestCase {
     parent::setUp('conditional_fields_test', 'list', 'text', 'number', 'taxonomy', 'image');
 
     // Create and log in user.
-    $web_user = $this->backdropCreateUser(array('create conditional_fields_test content', 'edit any conditional_fields_test content'));
+    $web_user = $this->backdropCreateUser(array(
+      'create conditional_fields_test content',
+      'edit any conditional_fields_test content',
+    ));
     $this->backdropLogin($web_user);
 
     // Create a vocabulary and two terms to test the term reference field.
-    $vocabulary = new stdClass();
-    $vocabulary->name = $this->randomName();
-    $vocabulary->machine_name = backdrop_strtolower($this->randomName());
-    taxonomy_vocabulary_save($vocabulary);
-    $term = new stdClass();
-    $term->name = 'Foo';
-    $term->vid = $vocabulary->vid;
+    $vocabulary = new TaxonomyVocabulary(array(
+      'machine_name' => backdrop_strtolower($this->randomName()),
+      'name' => $this->randomName(),
+    ));
+    $vocabulary->save();
+    $term = array(
+      'name' => 'Foo',
+      'vocabulary' => $vocabulary->machine_name,
+      'parent' => array(0),
+    );
+    $term = new TaxonomyTerm($term);
     taxonomy_term_save($term);
-    $term = new stdClass();
-    $term->name = 'Bar';
-    $term->vid = $vocabulary->vid;
+    $term = array(
+      'name' => 'Bar',
+      'vocabulary' => $vocabulary->machine_name,
+      'parent' => array(0),
+    );
+    $term = new TaxonomyTerm($term);
     taxonomy_term_save($term);
 
     // Create dependee.
@@ -47,7 +57,9 @@ class ConditionalFieldsTestCase extends BackdropWebTestCase {
       'field_name' => 'dependee',
       'type' => 'list_text',
       'settings' => array(
-        'allowed_values' => array($this->dependee_on_value => t('Dependent fields are visible'), $this->dependee_off_value => t('Dependent fields are invisible')),
+        'allowed_values' => array(
+          $this->dependee_on_value => t('Dependent fields are visible'),
+          $this->dependee_off_value => t('Dependent fields are invisible')),
       ),
     );
     field_create_field($dependee);
@@ -140,7 +152,14 @@ class ConditionalFieldsTestCase extends BackdropWebTestCase {
       field_create_field($dependent['field']);
       field_create_instance($dependent['instance']);
       $dependent_instance = field_info_instance('node', $dependent['field']['field_name'], 'conditional_fields_test');
-      conditional_fields_dependency_insert($dependee_instance['id'], $dependent_instance['id'], $dependency_options);
+      $dependency = array(
+        'dependee' => $dependee_instance['field_name'],
+        'dependent' => $dependent_instance['field_name'],
+        'options' => $dependency_options,
+        'entity_type' => 'node',
+        'bundle' => 'conditional_fields_test',
+      );
+      conditional_fields_dependency_insert($dependency);
     }
   }
 
@@ -148,6 +167,13 @@ class ConditionalFieldsTestCase extends BackdropWebTestCase {
    * Tests field dependencies on a node.
    */
   public function testNodeDependencies() {
+    // Temporarily force re-login.
+    $web_user = $this->backdropCreateUser(array(
+      'create conditional_fields_test content',
+      'edit any conditional_fields_test content',
+    ));
+    $this->backdropLogin($web_user);
+
     // Try to submit a node with triggered dependencies.
     // The submit should fail because the dependent fields are required.
     $langcode = LANGUAGE_NONE;
@@ -162,14 +188,19 @@ class ConditionalFieldsTestCase extends BackdropWebTestCase {
         continue;
       }
       // Multiple value textfields are dumb and can't find their own name.
-      if ($dependent['field']['cardinality'] == -1 && in_array($dependent['widget_type'], array('number', 'text_textfield', 'text_textarea', 'text_textarea_with_summary'))) {
+      if ($dependent['field']['cardinality'] == -1 && in_array($dependent['widget_type'], array(
+        'number',
+        'text_textfield',
+        'text_textarea',
+        'text_textarea_with_summary',
+        ))) {
         $name = '';
       }
       else {
         $name = $dependent['widget_type'] . '_' . $dependent['field_type'] . '_label';
         $name .= $dependent['field']['cardinality'] == -1 ? '_multiple' : '';
       }
-      $this->assertRaw(t('!name field is required.', array('!name' => $name)), 'Triggered ' . ($dependent['field']['cardinality'] == -1 ? 'multiple' : 'single') . ' value required ' . $dependent['field_type'] . ' dependent with widget ' . $dependent['widget_type'] . ' and no value fails validation');
+      $this->assertRaw(t('!name field is required.', array('!name' => $name)), 'Triggered ' . ($dependent['field']['cardinality'] == -1 ? 'multiple' : 'single') . ' value required ' . $dependent['field_type'] . ' dependent with widget ' . $dependent['widget_type'] . ' and no value fails validation (name: ' . $name . ')');
     }
 
     // Fill the dependents with values and save the node.
@@ -207,7 +238,10 @@ class ConditionalFieldsTestCase extends BackdropWebTestCase {
       }
     }
     $this->backdropPost('node/add/conditional-fields-test', $edit, t('Save'));
-    $this->assertRaw(t('@type %title has been created.', array('@type' => 'Conditional Fields Test Node Type', '%title' => '')), 'Node was created with triggered dependencies.');
+    $this->assertRaw(t('@type %title has been created.', array(
+      '@type' => 'Conditional Fields Test Node Type',
+      '%title' => '',
+    )), 'Node was created with triggered dependencies.');
     // Verify that the fields are visible on node view.
     foreach ($this->dependents as $dependent) {
       $this->assertText($dependent['instance']['label'] . ':', 'Triggered ' . ($dependent['field']['cardinality'] == -1 ? 'multiple' : 'single') . ' value ' . $dependent['field_type'] . ' dependent with widget ' . $dependent['widget_type'] . ' is visible on node view');
@@ -240,7 +274,11 @@ class ConditionalFieldsUITestCase extends backdropWebTestCase {
     parent::setUp('conditional_fields_test', 'list', 'text');
 
     // Create and log in user.
-    $web_user = $this->backdropCreateUser(array('access administration pages', 'administer content types', 'administer dependencies'));
+    $web_user = $this->backdropCreateUser(array(
+      'access administration pages',
+      'administer content types',
+      'administer dependencies',
+    ));
     $this->backdropLogin($web_user);
 
     // Create a field that will be used as a dependee.
@@ -248,7 +286,10 @@ class ConditionalFieldsUITestCase extends backdropWebTestCase {
       'field_name' => 'dependee',
       'type' => 'list_text',
       'settings' => array(
-        'allowed_values' => array('on' => t('Dependent is visible'), 'off' => t('Dependent is invisible')),
+        'allowed_values' => array(
+          'on' => t('Dependent is visible'),
+          'off' => t('Dependent is invisible'),
+        ),
       ),
     );
     field_create_field($dependee);
@@ -280,13 +321,14 @@ class ConditionalFieldsUITestCase extends backdropWebTestCase {
    */
   public function testDependenciesOverview() {
     $dependee = field_read_instance('node', 'dependee', 'conditional_fields_test');
+    $dependent = field_read_instance('node', 'dependent', 'conditional_fields_test');
     $this->backdropGet('admin/structure');
     $this->clickLink(t('Field dependencies'));
     $this->clickLink(t('Node'));
     $this->backdropGet('admin/structure/types/manage/conditional-fields-test');
     $this->clickLink(t('Manage dependencies'));
-    $this->assertFieldByName('dependee', $dependee['id'], 'The dependee selection field is in the content type dependencies page.');
-    $this->assertFieldByName('dependent', $dependee['id'], 'The dependent selection field is in the content type dependencies page.');
+    $this->assertFieldByName('dependee', $dependee['field_name'], 'The dependee selection field is in the content type dependencies page.');
+    $this->assertFieldByName('dependent', '', 'The dependent selection field is in the content type dependencies page.');
   }
 
   /**
@@ -297,8 +339,8 @@ class ConditionalFieldsUITestCase extends backdropWebTestCase {
     $dependee = field_read_instance('node', 'dependee', 'conditional_fields_test');
     $dependent = field_read_instance('node', 'dependent', 'conditional_fields_test');
     $edit = array(
-      'dependee' => $dependee['id'],
-      'dependent' => $dependent['id'],
+      'dependee' => $dependee['field_name'],
+      'dependent' => $dependent['field_name'],
     );
     $this->backdropPost('admin/structure/types/manage/conditional-fields-test/dependencies', $edit, t('Add dependency'), array(), array(), 'conditional-fields-dependency-add-form-node-conditional-fields-test');
 
@@ -316,8 +358,12 @@ class ConditionalFieldsUITestCase extends backdropWebTestCase {
     )), 'The dependency was updated correctly.');
 
     // Delete dependency.
-    $this->clickLink(t('delete'));
-    $this->backdropPost(NULL, array(), t('Delete dependency'), array('query' => array('destination' => 'admin/structure/types/manage/conditional-fields-test/dependencies')));
+    $this->clickLink(t('Delete'));
+    $this->backdropPost(NULL, array(), t('Delete dependency'), array(
+      'query' => array(
+        'destination' => 'admin/structure/types/manage/conditional-fields-test/dependencies',
+      ),
+    ));
     $this->assertText(t('The dependency has been deleted.'));
   }
 }
