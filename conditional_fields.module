@@ -1376,12 +1376,33 @@ function conditional_fields_dependency_load($id) {
 }
 
 /**
+ * Cleanup form cruft from the options, e.g. removing 4 => 0 entries.
+ */
+function conditional_fields_clean_up_options(&$options) {
+  foreach (array('element_view', 'element_edit') as $key) {
+    $options[$key] = !empty($options[$key]) ? array_filter($options[$key]) : array();
+  }
+  foreach (array('element_view_per_role' => 'element_view_roles', 'element_edit_per_role' => 'element_edit_roles') as $on_key => $settings_key) {
+    if (empty($options[$on_key])) {
+      $options[$settings_key] = array();
+    }
+    elseif (!empty($options[$settings_key])) {
+      foreach ($options[$settings_key] as $id => $rids) {
+        $options[$settings_key][$id] = array_filter($rids);
+      }
+    }
+  }
+}
+
+/**
  * Inserts a new dependency in the database.
  * For the format of $options,
  * @see conditional_fields_dependency_default_options()
  */
 function conditional_fields_dependency_insert($dependee_id, $dependent_id, $options = array()) {
   $options += conditional_fields_dependency_default_options();
+  conditional_fields_clean_up_options($options);
+
   $dependency = array(
     'dependee'  => $dependee_id,
     'dependent' => $dependent_id,
@@ -1397,6 +1418,7 @@ function conditional_fields_dependency_insert($dependee_id, $dependent_id, $opti
  * Updates a dependency.
  */
 function conditional_fields_dependency_update($dependency) {
+  conditional_fields_clean_up_options($dependency['options']);
   drupal_write_record('conditional_fields', $dependency, 'id');
 }
 
