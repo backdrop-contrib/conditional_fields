@@ -33,7 +33,13 @@ Drupal.states.Dependent.comparisons['Object'] = function (reference, value) {
     return this.RegExp(reference, value);
   }
   else {
-    return compare(reference, value);
+    // Do plain text comparison instead:
+	  // We use number as workaround for indirect plain text comparison.
+	  // The global "compare()" from states.js should be called directly here,
+	  // but that is not possible because it is bound to the jquery namespace
+	  // within states.js and not accessible from here!
+	  // See https://www.drupal.org/node/1973320#comment-11716869
+    return Drupal.states.Dependent.comparisons.Number(reference, value);
   }
 };
 
