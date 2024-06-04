@@ -203,7 +203,24 @@ class ConditionalFieldsTestCase extends BackdropWebTestCase {
       $cardinality = $dependent['field']['cardinality'] == -1 ? 'multiple' : 'single';
       $trigger_description = 'Triggered ' . $cardinality . ' value required ' . $dependent['field_type'] . ' dependent with widget ' . $dependent['widget_type'] . ' and no value fails validation (name: ' . $name . ')';
       // Need to adjust the error message for date fields in particular, below.
-      $this->assertRaw(t('!name field is required.', array('!name' => $name)), $trigger_description);
+      $is_date = in_array($dependent['field_type'], array('date', 'datetime', 'datestamp'));
+      if ($is_date) {
+        if ($dependent['widget_type'] == 'date_text' || $dependent['widget_type'] == 'date_popup' || $dependent['widget_type'] == 'date_select') {
+          $assert_text = t('A valid date is required for %name.', array('%name' => $name));
+        }
+        elseif ($dependent['widget_type'] == 'date_html5') {
+          if ($cardinality == 'multiple') {
+            $assert_text = t('A start date for value #1 is required in %name.', array('%name' => $name));
+          }
+          else {
+            $assert_text = t('A start date is required in %name.', array('%name' => $name));
+          }
+        }
+      }
+      else {
+        $assert_text = t('!name field is required.', array('!name' => $name));
+      }
+      $this->assertRaw($assert_text, $trigger_description);
     }
 
     // Fill the dependents with values and save the node.
