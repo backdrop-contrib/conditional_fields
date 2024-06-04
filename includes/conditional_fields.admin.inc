@@ -166,20 +166,22 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
         // Dependencies come ordered by dependent, so by adding it only to the
         // first row they will appear grouped.
         if ($first_row == TRUE) {
-          $dependent_parts = explode('.', $dependent);
-          $dependent_field_name = $dependent_parts[2];
           $form['table']['dependencies'][$id]['dependent'] = array(
-            '#markup' => check_plain($instances[$dependent_field_name]['label']) . ' (' . $dependent . ')',
+            '#markup' => theme('label_machine_name', array(
+              'label' => check_plain($instances[$dependent]['label']),
+              'machine_name' => $dependent,
+            )),
             '#rowspan' => $dependee_count,
           );
 
           $first_row = FALSE;
         }
-        $dependee_parts = explode('.', $dependency['dependee']);
-        $dependee_field_name = $dependee_parts[2];
         $row = array(
           'dependee' => array(
-            '#markup' => check_plain($instances[$dependee_field_name]['label']) . ' (' . $dependency['dependee'] . ')',
+            '#markup' => theme('label_machine_name', array(
+              'label' => check_plain($instances[$dependency['dependee']]['label']),
+              'machine_name' => $dependency['dependee'],
+            )),
           ),
         );
 
@@ -198,18 +200,18 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
           $row['description']['#colspan'] = 2;
         }
 
-        $row['description']['#markup'] = conditional_fields_dependency_description($instances[$dependee_field_name]['label'], $instances[$dependent_field_name]['label'], $dependency['options']);
+        $row['description']['#markup'] = conditional_fields_dependency_description($instances[$dependency['dependee']]['label'], $instances[$dependent]['label'], $dependency['options']);
 
         $operations = array();
 
         $operations['edit'] = array(
           'title' => t('Edit'),
-          'href' => 'admin/structure/dependencies/edit/' . $id,
+          'href' => 'admin/structure/dependencies/edit/' . $entity_type . '.' . $bundle_name . '.' . $dependent . '.' . $id,
           'query' => $destination,
         );
         $operations['delete'] = array(
           'title' => t('Delete'),
-          'href' => 'admin/structure/dependencies/delete/' . $id,
+          'href' => 'admin/structure/dependencies/delete/' . $entity_type . '.' . $bundle_name . '.' . $dependent . '.' . $id,
           'query' => $destination,
         );
 
@@ -229,7 +231,7 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
   $fields = array();
 
   foreach ($instances as $field) {
-    $instance_id = $field['entity_type'] . '.' . $field['bundle'] . '.' . $field['field_name'];
+    $instance_id = $field['field_name'];
     $fields[$instance_id] = check_plain($field['label'] . ' (' . $field['field_name'] . ')');
   }
 
@@ -245,6 +247,14 @@ function conditional_fields_dependency_add_form($form, &$form_state, $entity_typ
 
   // Add new dependency row.
   $form['table']['add_new_dependency'] = array(
+    'entity_type' => array(
+      '#type' => 'hidden',
+      '#value' => $entity_type,
+    ),
+    'bundle_name' => array(
+      '#type' => 'hidden',
+      '#value' => $bundle_name,
+    ),
     'dependent' => array(
       '#type' => 'select',
       '#title' => t('Conditional field'),
@@ -312,17 +322,27 @@ function conditional_fields_dependency_add_form_validate($form, &$form_state) {
  * @see conditional_fields_dependency_add_form_validate()
  */
 function conditional_fields_dependency_add_form_submit($form, &$form_state) {
+  $entity_type = $form_state['values']['entity_type'];
+  $bundle = $form_state['values']['bundle_name'];
+  $dependent = $form_state['values']['dependent'];
   $options = array(
     'state' => $form_state['values']['state'],
     'condition' => $form_state['values']['condition'],
   );
-  if (!$id = conditional_fields_dependency_insert($form_state['values']['dependee'], $form_state['values']['dependent'], $options)) {
+  $dependency = array(
+    'entity_type' => $entity_type,
+    'bundle' => $bundle,
+    'dependee' => $form_state['values']['dependee'],
+    'dependent' => $dependent,
+    'options' => $options,
+  );
+  if (!$id = conditional_fields_dependency_insert($dependency)) {
     backdrop_set_message(t('There was an error while trying to create the dependency.'), 'error');
     return;
   }
 
   $destination = backdrop_get_destination();
-  backdrop_goto("admin/structure/dependencies/edit/$id", array('query' => $destination));
+  backdrop_goto("admin/structure/dependencies/edit/$entity_type.$bundle.$dependent.$id", array('query' => $destination));
 }
 
 /**
@@ -391,9 +411,8 @@ function conditional_fields_dependency_edit_form($form, &$form_state, $dependenc
   $form['#attached']['css'][] = backdrop_get_path('module', 'conditional_fields') . '/conditional_fields.css';
 
   // Retrieve needed information from the dependee instance.
-  $dependee_parts = explode('.', $dependency['dependee']);
-  $dependee = field_info_field($dependee_parts[2]);
-  $dependee_instance = field_info_instance($dependee_parts[0], $dependee_parts[2], $dependee_parts[1]);
+  $dependee = field_info_field($dependency['dependee']);
+  $dependee_instance = field_info_instance($dependency['entity_type'], $dependency['dependee'], $dependency['bundle']);
 
   // Build a dummy field widget to use as form field in single value selection
   // option.
@@ -764,6 +783,8 @@ function conditional_fields_dependency_edit_form_submit($form, &$form_state) {
     'id' => $form['#dependency']['id'],
     'dependee' => $form['#dependency']['dependee'],
     'dependent' => $form['#dependency']['dependent'],
+    'entity_type' => $form['#dependency']['entity_type'],
+    'bundle' => $form['#dependency']['bundle'],
     'options' => array(
       'state' => $form_state['values']['state'],
       'condition' => $form_state['values']['condition'],
@@ -846,7 +867,7 @@ function conditional_fields_dependency_delete_form($form, $form_state, $dependen
  * Confirm form submit for the deletion of a dependency.
  */
 function conditional_fields_dependency_delete_form_submit($form, &$form_state) {
-  conditional_fields_dependency_delete(array($form_state['values']['dependency']));
+  conditional_fields_dependency_delete(array($form_state['build_info']['args'][0]));
   backdrop_set_message(t('The dependency has been deleted.'));
 }
 

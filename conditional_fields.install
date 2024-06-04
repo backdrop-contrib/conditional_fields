@@ -5,43 +5,6 @@
  */
 
 /**
- * Implements hook_schema().
- */
-function conditional_fields_schema() {
-  $schema['conditional_fields'] = array(
-    'description' => 'Stores dependencies between fields.',
-    'fields' => array(
-      'id' => array(
-        'type' => 'serial',
-        'not null' => TRUE,
-        'description' => 'The primary identifier for a dependency.',
-      ),
-      'dependee' => array(
-        'type' => 'varchar',
-        'not null' => TRUE,
-        'length' => 128,
-        'description' => 'The id of the dependee field instance.',
-      ),
-      'dependent' => array(
-        'type' => 'varchar',
-        'not null' => TRUE,
-        'length' => 128,
-        'description' => 'The id of the dependent field instance.',
-      ),
-      'options' => array(
-        'type' => 'blob',
-        'size' => 'big',
-        'not null' => TRUE,
-        'serialize' => TRUE,
-        'description' => 'Serialized data containing the options for the dependency.',
-      ),
-    ),
-    'primary key' => array('id'),
-  );
-  return $schema;
-}
-
-/**
  * Implements hook_update_last_removed().
  */
 function conditional_fields_update_last_removed() {
@@ -52,7 +15,6 @@ function conditional_fields_update_last_removed() {
  * Adjust schema and data for new field instance identifier format.
  */
 function conditional_fields_update_1000() {
-  $config = config('conditional_fields.settings');
   if (db_table_exists('conditional_fields')) {
     db_change_field('conditional_fields', 'dependee', 'dependee', array(
       'description' => 'The id of the dependee field instance.',
@@ -92,5 +54,44 @@ function conditional_fields_update_1000() {
         ->execute();
     }
   }
+}
 
+/**
+ * Convert configuration to use deployable CMI instead of storing in database.
+ */
+function conditional_fields_update_1100() {
+  // Remove unneeded config file, if it exists.
+  $config = config('conditional_fields.settings');
+  if (!$config->isNew()) {
+    $config->delete();
+  }
+
+  // Convert the database-stored configuration to CMI.
+  if (db_table_exists('conditional_fields')) {
+    $select = db_select('conditional_fields', 'cf');
+    $select->fields('cf', array('options', 'dependee', 'dependent'));
+    $select->orderBy('cf.dependent');
+    $result = $select->execute();
+    foreach ($result as $conditional) {
+      $config = config('conditional_field.' . $conditional->dependent . '.settings');
+      if ($config->isNew()) {
+        $parts = explode('.', $conditional->dependent);
+        $config->set('label', t('Conditionals for Field @field - Entity @entity; Bundle @bundle', array(
+          '@field' => $parts[2],
+          '@entity' => $parts[0],
+          '@bundle' => $parts[1],
+        )));
+        $config->set('type', $conditional->dependent);
+      }
+      // Update the ID with the new format.
+      $formatted_dependee = array(
+        'dependee' => explode('.', $conditional->dependee)[2],
+        'options' => unserialize($conditional->options),
+      );
+      $uuid = new Uuid();
+      $config->set($uuid->generate(), $formatted_dependee);
+      $config->save();
+    }
+    db_drop_table('conditional_fields');
+  }
 }

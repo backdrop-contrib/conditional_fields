@@ -34,7 +34,6 @@ at **admin/structure/dependencies**.
 
 More details may be found (or contributed to) in the [Wiki](https://github.com/backdrop-contrib/conditional_fields/issues)
 
-
 Issues
 ------
 
@@ -43,15 +42,16 @@ Bugs and Feature requests should be reported in the [Issue Queue](https://github
 Current Maintainers
 -------------------
 
-- [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+- [Laryn Kragt Bakker](https://github.com/laryn)
 - Co-maintainers wanted
 
 Credits
 -------
 
-- Ported to Backdrop by [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+- Ported to Backdrop by [Laryn Kragt Bakker](https://github.com/laryn)
+- Ongoing Backdrop development is supported by [Aten Design Group](https://aten.io)
+- Initial port to Backdrop sponsored by [CEDC.org](https://CEDC.org)
 - Originally written by and maintained for Drupal by [Gregorio Magini](https://www.drupal.org/u/peterpoe)
-
 
 License
 -------
