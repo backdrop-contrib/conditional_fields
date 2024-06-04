@@ -258,6 +258,11 @@ function conditional_fields_element_after_build($element, &$form_state) {
     return $element;
   }
 
+  // Avoid processing fields in views forms.
+  if (backdrop_substr($form['#form_id'], 0, 11) == 'views_form_') {
+    return $element;
+  }
+
   // Some fields do not have entity type and bundle properties. In this case we
   // try to use the properties from the form. This is not an optimal solution,
   // since in case of fields in entities within entities they might not correspond,
@@ -554,7 +559,7 @@ function conditional_fields_form_after_build($form, &$form_state) {
         // The handler has no return value. Modify the $state parameter by
         // reference if needed.
         foreach ($state_handlers as $handler => $handler_conditions) {
-          if (array_intersect_assoc($handler_conditions, $dependee_form_field) == $handler_conditions) {
+          if (_conditional_fields_intersect_array($handler_conditions, $dependee_form_field) == $handler_conditions) {
             $handler($dependee_form_field, $dependee_form_state, $options, $state);
           }
         }
@@ -1509,6 +1514,25 @@ function conditional_fields_dependency_load($id) {
 }
 
 /**
+ * Cleanup form cruft from the options, e.g. removing 4 => 0 entries.
+ */
+function conditional_fields_clean_up_options(&$options) {
+  foreach (array('element_view', 'element_edit') as $key) {
+    $options[$key] = !empty($options[$key]) ? array_filter($options[$key]) : array();
+  }
+  foreach (array('element_view_per_role' => 'element_view_roles', 'element_edit_per_role' => 'element_edit_roles') as $on_key => $settings_key) {
+    if (empty($options[$on_key])) {
+      $options[$settings_key] = array();
+    }
+    elseif (!empty($options[$settings_key])) {
+      foreach ($options[$settings_key] as $id => $roles) {
+        $options[$settings_key][$id] = array_filter($roles);
+      }
+    }
+  }
+}
+
+/**
  * Inserts a new dependency in the configuration.
  *
  * @param array $dependency
@@ -1524,6 +1548,8 @@ function conditional_fields_dependency_load($id) {
  */
 function conditional_fields_dependency_insert($dependency) {
   $dependency['options'] += conditional_fields_dependency_default_options();
+  conditional_fields_clean_up_options($dependency['options']);
+
   $entity_type = $dependency['entity_type'];
   $bundle = $dependency['bundle'];
   $dependent = $dependency['dependent'];
@@ -1551,6 +1577,7 @@ function conditional_fields_dependency_insert($dependency) {
  * Updates a dependency.
  */
 function conditional_fields_dependency_update($dependency) {
+  conditional_fields_clean_up_options($dependency['options']);
   $entity_type = $dependency['entity_type'];
   $bundle = $dependency['bundle'];
   $dependent = $dependency['dependent'];
@@ -2164,4 +2191,28 @@ function conditional_fields_module_implements_alter(&$implementations, $hook) {
       $implementations['conditional_fields'] = $group;
     }
   }
+}
+
+/**
+ * Helper function to do a recursive compution of the intersection of arrays.
+ *
+ * @param array $arr1
+ *   The array with master values to check.
+ * @param array $arr2
+ *   An array to compare values against.
+ *
+ * @return array
+ *   An associative array containing all the values in $arr1 that are present
+ *   in $arr2.
+ */
+function _conditional_fields_intersect_array(&$arr1, &$arr2) {
+  if (!is_array($arr1) || !is_array($arr2)) {
+    return (string) $arr1 == (string) $arr2;
+  }
+  $commonkeys = array_intersect(array_keys($arr1), array_keys($arr2));
+  $ret = array();
+  foreach ($commonkeys as $key) {
+    $ret[$key] = _conditional_fields_intersect_array($arr1[$key], $arr2[$key]);
+  }
+  return $ret;
 }
