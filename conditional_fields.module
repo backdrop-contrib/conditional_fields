@@ -1446,7 +1446,7 @@ function conditional_fields_load_dependencies($entity_type = NULL, $bundle = NUL
           continue;
         }
         $entity_type_match = (!$entity_type || ($entity_type && $dependent_parts[0] == $entity_type));
-        $bundle_match = (!$bundle || ($bundle && $dependent_parts[1] == $bundle));
+        $bundle_match = (!$bundle || (isset($dependent_parts[1]) && $dependent_parts[1] == $bundle));
         if ($entity_type_match && $bundle_match) {
           // Make sure there is no Entity type or Bundle specified, or that the
           // specified Entity type or Bundle match the one that is returned
