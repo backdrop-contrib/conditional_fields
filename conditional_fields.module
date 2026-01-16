@@ -735,7 +735,8 @@ function conditional_fields_dependent_validate($element, &$form_state, $form) {
             $input_state = (is_null($input_state)) ? array() : $input_state;
             if (isset($dependent['#field_name'])) {
               $field = field_info_field($dependent['#field_name']);
-              $input_state = _field_filter_items($field, $input_state);
+              $instance = $form_state['field'][$dependent['#field_name']][$dependent['#language']]['instance'] ?? [];
+              $input_state = _field_filter_items($field, $input_state, $instance);
             }
 
             $info = field_info_field($dependent['#field_name']);
